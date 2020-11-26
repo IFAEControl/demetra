@@ -2,3 +2,4 @@ src
 
 !src/
 src/poky
+src/*_yocto

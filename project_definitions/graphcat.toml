@@ -1,7 +1,8 @@
+setup_dir = "graphcat_yocto"
 release = "zeus"
 machine = "zc702-zynq7"
 
 # Extra layer
-[[layer]]
-name = "meta-gfa"
+[[repo]]
 uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"
+layers = ["meta-gfa"]

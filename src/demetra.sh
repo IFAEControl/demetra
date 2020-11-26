@@ -12,15 +12,6 @@ DEVICE=""
 BITSTREAM=~/gfa_fw_sim/petalinux/gfa_uzed7010_sim_2014.4/subsystems/linux/hw-description/design_1_wrapper.bit
 DEFAULT_IMAGE=core-image-minimal
 
-source scripts/project_specific/dirs.sh
-
-# In case it doesn't exist, create dummy files
-touch scripts/project_specific/layers.sh
-touch scripts/project_specific/repositories.sh
-
-REMOTE_BUILD_IP="172.16.17.23"
-REMOTE_BUILD_USER="droman"
-REMOTE_BUILD_COMMAND="cd gfayocto; git clean -fd; git checkout -- .;git pull;./gfa.sh -db"
 EXTRA_ARGS=""
 RELEASE=dunfell
 YOCTO_LOG_FILE="/tmp/yocto_log.csv" # Set the correct value in ~/.gfayocto_config.env
@@ -62,7 +53,6 @@ REMOTE OPTIONS
 --args              Append given args when invoking demetra.sh remotely
 
 ADVANCED OPTIONS
--r, --remote        Remote ssh build. Depends on docker
 -R, --release       Specify a yocto release. By default sumo is used
 -g, --git           Pull all gfa repositories (WARNING: It will discard any changes made to those repositories)
 -l, --log           When packing, add new version to yocto log file with the given comment (requires --pack)
@@ -113,51 +103,6 @@ function repo_commit() {
        echo "c$(get_git_commit "$1")"
     fi
     ) || exit 1
-}
-
-function cp_repo_to_remote() {
-    archive_name="$(archive "$1" "/tmp")"
-    scp "/tmp/$archive_name" $REMOTE_BUILD_USER@$REMOTE_BUILD_IP:"$2/$archive_name" || exit
-}
-
-function uncompress_remote_repo() {
-    REPO_NAME="$(basename "$1")"
-    FILE_NAME="${REPO_NAME}.zip"
-    echo "unzip -ou $2/$FILE_NAME -d $2/$REPO_NAME; exit" | ssh -tt $REMOTE_BUILD_USER@$REMOTE_BUILD_IP
-}
-
-function prepare_remote_repo() {
-    cp_repo_to_remote "$1" "$2"
-    uncompress_remote_repo "$1" "$2"
-}
-
-function build_remote() {
-    TMP_DIR=$(mktemp -d)
-
-    echo "mkdir -p $TMP_DIR; exit" | ssh -tt $REMOTE_BUILD_USER@$REMOTE_BUILD_IP
-
-    if [[ ! -z "$HDF" ]]; then
-        hdf_name="$(basename "$HDF")"
-        scp "$HDF" $REMOTE_BUILD_USER@$REMOTE_BUILD_IP:$TMP_DIR/$hdf_name
-        EXTRA_ARGS+=" -H $TMP_DIR/$hdf_name"
-    fi
-
-   NAME="$(basename "$profile")"
-   cp $profile /tmp/remote_profile || exit 1
-
-   for i in "${!PROJECT_DIRS[@]}"; do
-       echo "${i}=$TMP_DIR/$(basename ${PROJECT_DIRS[$i]})" >> /tmp/remote_profile
-   done
-
-   scp /tmp/remote_profile $REMOTE_BUILD_USER@$REMOTE_BUILD_IP:$TMP_DIR/profile_$NAME
-   
-   for i in "${PROJECT_DIRS[@]}"; do
-       prepare_remote_repo "$i" "$TMP_DIR"
-   done
-
-
-   echo "$REMOTE_BUILD_COMMAND -P /$TMP_DIR/profile_$NAME $EXTRA_ARGS; exit" | ssh -tt $REMOTE_BUILD_USER@$REMOTE_BUILD_IP   
-   echo "rm -rf $TMP_DIR; exit" | ssh -tt $REMOTE_BUILD_USER@$REMOTE_BUILD_IP
 }
 
 function build_docker() {
@@ -273,7 +218,7 @@ if [[ $? -ne 4 ]]; then
 fi
 
 SHORT=hm:bdB:p:D:cCu:P:tSTvErR:,g,H:,l:,s
-LONG=help,machine:,build,docker,bitsream:,password:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,external,remote,release:,git,hdf:,log:,shell,no-qspi,args:
+LONG=help,machine:,build,docker,bitsream:,password:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,external,release:,git,hdf:,log:,shell,no-qspi,args:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -296,7 +241,6 @@ sshcopy=false
 tests=false
 verbose=false
 external=false
-remote=false
 git=false
 shell=false
 noqspi=false
@@ -371,10 +315,6 @@ while true; do
             external=true
             shift
             ;;
-         -r|--remote)
-            remote=true
-            shift
-            ;;
          -g|--git)
             git=true
             shift
@@ -413,8 +353,9 @@ while true; do
             ;;
     esac
 done
+return
 
-./scripts/download.sh "$RELEASE" || exit 1
+#./scripts/download.sh "$RELEASE" || exit 1
 
 # If a profile is given, then we will use that configuration
 if [ "${profile+x}" ]; then
@@ -462,9 +403,7 @@ if $git; then
     update_git_repos || exit
 fi
 
-if $remote; then
-    build_remote || exit 1
-elif $docker && $build; then
+if $docker && $build; then
 	build_docker || exit 1
 elif $build; then
     build_local || exit 1

@@ -23,46 +23,74 @@ func runCommand(b *basher.Context, cmd string, args []string) error {
 	return nil
 }
 
-func setupSingleLayer(b *basher.Context, layer_uri, layer_name string) {
-	err := runCommand(b, "clone", []string{layer_uri})
+func setupSingleLayer(b *basher.Context, uri string, layers ...string) {
+	err := runCommand(b, "clone", []string{uri})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = runCommand(b, "check_layer", []string{layer_name})
-	if err != nil {
-		log.Fatal(err)
+	for _, l := range layers {
+		err = runCommand(b, "check_layer", []string{l})
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
-func main() {
-	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
-	getopt.Parse()
-
-	cfg, err := parseConfig(*proj_def)
-	if err != nil {
-		log.Fatal(err)
+func setupLayers(b *basher.Context, layers []repo) {
+	// first setup default layers
+	default_layers := []repo{
+		{"git@gitlab.pic.es:DESI-GFA/yocto/meta-dev.git", []string{"meta-dev"}},
+		{"git@gitlab.pic.es:ifaecontrol/meta-ifae.git", []string{"meta-ifae"}},
+		{"git://git.yoctoproject.org/meta-xilinx", []string{"meta-xilinx/meta-xilinx-bsp"}},
+		{"git://git.openembedded.org/meta-openembedded",
+			[]string{
+				"meta-openembedded/meta-oe",
+				"meta-openembedded/meta-python",
+				"meta-openembedded/meta-networking",
+			},
+		},
 	}
 
-	bash, _ := basher.NewContext("/bin/bash", true)
-	bash.CopyEnv()
-	bash.Export("RELEASE", cfg.Release)
-	if bash.HandleFuncs(os.Args) {
+	for _, l := range default_layers {
+		setupSingleLayer(b, l.Uri, l.Layers...)
+	}
+
+	// then setup extra layers
+	for _, l := range layers {
+		setupSingleLayer(b, l.Uri, l.Layers...)
+	}
+}
+
+func setupYocto(b *basher.Context, cfg tomlConfig) {
+	b.Export("RELEASE", cfg.Release)
+	if b.HandleFuncs(os.Args) {
 		os.Exit(0)
 	}
 
-	bash.Source("scripts/helper_functions.sh", nil)
-	err = runCommand(bash, "clone", []string{"git://git.yoctoproject.org/poky"})
+	b.Source("scripts/helper_functions.sh", nil)
+
+	err := os.MkdirAll(cfg.SetupDir, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = runCommand(bash, "setup_build_dir", []string{})
+	err = os.Chdir(cfg.SetupDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = runCommand(bash, "checkout_machine", []string{cfg.Machine})
+	err = runCommand(b, "clone", []string{"git://git.yoctoproject.org/poky"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = runCommand(b, "setup_build_dir", []string{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = runCommand(b, "checkout_machine", []string{cfg.Machine})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,28 +100,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// default meta layers
-	default_layers := []layer{
-		{"meta-dev", "git@gitlab.pic.es:DESI-GFA/yocto/meta-dev.git"},
-		{"meta-ifae", "git@gitlab.pic.es:ifaecontrol/meta-ifae.git"},
-		{"meta-openembedded/meta-oe", "git://git.openembedded.org/meta-openembedded"},
-		{"meta-openembedded/meta-python", "git://git.openembedded.org/meta-openembedded"},
-		{"meta-openembedded/meta-networking", "git://git.openembedded.org/meta-openembedded"},
-		{"meta-xilinx/meta-xilinx-bsp", "git://git.yoctoproject.org/meta-xilinx"},
-	}
+	setupLayers(b, cfg.Repo)
+}
 
-	for _, l := range default_layers {
-		setupSingleLayer(bash, l.Uri, l.Name)
-	}
+func main() {
+	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
+	build := getopt.BoolLong("build", 'b', "", "Build image")
+	getopt.Parse()
 
-	// extra meta layers
-	for _, l := range cfg.Layer {
-		setupSingleLayer(bash, l.Uri, l.Name)
-	}
-
-	// build
-	err = runCommand(bash, "build", []string{})
+	cfg, err := parseConfig(*proj_def)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	bash, _ := basher.NewContext("/bin/bash", false)
+	bash.CopyEnv()
+
+	setupYocto(bash, cfg)
+
+	// build
+	if *build {
+		err = runCommand(bash, "build", []string{})
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
