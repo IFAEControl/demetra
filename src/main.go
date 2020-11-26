@@ -106,11 +106,17 @@ func setupYocto(b *basher.Context, cfg tomlConfig) {
 func main() {
 	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
 	build := getopt.BoolLong("build", 'b', "", "Build image")
+	release := getopt.StringLong("release", 'R', "", "Override defined release")
+
 	getopt.Parse()
 
 	cfg, err := parseConfig(*proj_def)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *release != "" {
+		cfg.Release = *release
 	}
 
 	bash, _ := basher.NewContext("/bin/bash", false)

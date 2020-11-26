@@ -7,7 +7,6 @@ machine = "mercury-zx5"
 uri = "git@gitlab.pic.es:DESI-GFA/meta-enclustra.git"
 layers = ["meta-enclustra"]
 
-
 [[repo]]
 uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"
 layers = ["meta-gfa"]
