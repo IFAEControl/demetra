@@ -1,1 +1,11 @@
 release = "zeus"
+machine = "zc702-zynq7"
+
+# Extra layers
+[[layer]]
+name = "meta-enclustra"
+uri = "git@gitlab.pic.es:DESI-GFA/meta-enclustra.git"
+
+[[layer]]
+name = "meta-gfa"
+uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"

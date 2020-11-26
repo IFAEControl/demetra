@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VALID_MACHINES="mercury-zx5 microzed-zynq7"
+VALID_MACHINES="mercury-zx5 microzed-zynq7 zc702-zynq7"
 
 function get_git_commit() {
    (
@@ -70,12 +70,12 @@ function clone_do() {
 	DIR=$(echo "$DIR" | sed 's/.git//g')
 
 	if [ ! -d "$DIR" ]; then
-		git -c http.sslVerify=false clone "$1" 
+		git -c http.sslVerify=false clone "$1" || exit $?
 	fi
 	cd  "$DIR" || exit 1
 
 	[ "$DIR" != "meta-gfa" ] && [ "$DIR" != "meta-enclustra" ] && clean_repository
-	git -c http.sslVerify=false  pull
+	git -c http.sslVerify=false  pull || exit $?
 
 	if [ "$2" != "" ]; then
 		git checkout "$2"
@@ -116,8 +116,8 @@ function check_machine() {
 
 function checkout_machine() {
 	check_machine "$1"
-	if ! grep "\"$1\"" resources/local.conf > /dev/null; then
-		sed -i "s/^\(MACHINE ??= \).*/\1\"$1\"/" resources/local.conf
+	if ! grep "\"$1\"" poky/build/conf/local.conf > /dev/null; then
+		sed -i "s/^\(MACHINE ??= \).*/\1\"$1\"/" poky/build/conf/local.conf
 	fi
 }
 
@@ -131,3 +131,18 @@ function check_layer() {
 	mv "$TMP" build/conf/bblayers.conf
 }
 
+function setup_build_dir() {
+	if [ ! -d "poky/build" ]; then
+    	bash -c "cd poky; source ./oe-init-build-env > /dev/null" || exit 1
+	fi
+
+	if [ ! -d "poky/build" ]; then
+	    echo "Error when creating poky build directory"
+	    exit 1
+	fi
+}
+
+function build() {
+	source oe-init-build-env
+	bitbake core-image-minimal
+}

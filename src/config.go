@@ -6,13 +6,20 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type tomlConfig struct {
-	Release string
+type layer struct {
+	Name string
+	Uri  string
 }
 
-func parseConfig() (tomlConfig, error) {
+type tomlConfig struct {
+	Release string
+	Machine string
+	Layer   []layer
+}
+
+func parseConfig(f string) (tomlConfig, error) {
 	var config tomlConfig
-	if _, err := toml.DecodeFile("example.toml", &config); err != nil {
+	if _, err := toml.DecodeFile(f, &config); err != nil {
 		log.Fatal(err)
 		return tomlConfig{}, err
 	}

@@ -11,14 +11,7 @@ MCP_DIR="$6"
 EXTERNAL="$7"
 
 # If it is the first time we execute it, we will need to create the build directory
-if [ ! -d "poky/build" ]; then
-    bash -c "cd poky; source ./oe-init-build-env > /dev/null" || exit 1
-fi
-
-if [ ! -d "poky/build" ]; then
-    echo "Error when creating poky build directory"
-    exit 1
-fi
+setup_build_dir || exit 1
 
 checkout_machine "$MACHINE"
 
@@ -36,12 +29,3 @@ else
 fi
 
 cd poky || exit
-
-check_layer meta-dev
-check_layer meta-python
-check_layer meta-oe
-check_layer meta-networking
-check_layer meta-gfa
-check_layer meta-xilinx/meta-xilinx-bsp
-check_layer meta-enclustra
-
