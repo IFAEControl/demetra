@@ -1,14 +1,76 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"github.com/pborman/getopt/v2"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/progrium/go-basher"
 )
+
+type LocalConf struct {
+}
+
+func (c LocalConf) append(line string) {
+	if c.contains(line) {
+		return
+	}
+
+	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+	if _, err := f.WriteString(line + "\n"); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (c LocalConf) contains(line string) bool {
+	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), line) {
+			return true
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return false
+}
+
+func (c LocalConf) set(key, val string) {
+	line := key + " = \"" + val + "\""
+
+	// If value already set return without doing anytying
+	if c.contains(line) {
+		return
+	}
+
+	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+	if _, err := f.WriteString(line + "\n"); err != nil {
+		log.Fatal(err)
+	}
+}
 
 func runCommand(b *basher.Context, cmd string, args []string) error {
 	status, err := b.Run(cmd, args)
@@ -90,6 +152,11 @@ func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 		log.Fatal(err)
 	}
 
+	err = runCommand(b, "rebuild_local_conf", []string{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	err = runCommand(b, "checkout_machine", []string{cfg.Machine})
 	if err != nil {
 		log.Fatal(err)
@@ -100,32 +167,18 @@ func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 		log.Fatal(err)
 	}
 
+	conf := LocalConf{}
 	if external {
-		f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		defer f.Close()
-		if _, err := f.WriteString("INHERIT += \"externalsrc\"\n"); err != nil {
-			log.Fatal(err)
-		}
+		conf.append("INHERIT += \"externalsrc\"")
 
 		for key, value := range cfg.Srcs {
 			k := "EXTERNALSRC_pn" + key
 			path := Expand(value.Path)
-
-			line := k + " = \"" + path + "\"\n"
-			if _, err := f.WriteString(line); err != nil {
-				log.Fatal(err)
-			}
+			conf.set(k, path)
 
 			if value.Module {
 				k := "EXTERNALSRC_BUILD_pn-" + key
-				line := k + " = \"" + path + "\"\n"
-				if _, err := f.WriteString(line); err != nil {
-					log.Fatal(err)
-				}
+				conf.set(k, path)
 			}
 		}
 	}

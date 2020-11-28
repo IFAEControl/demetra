@@ -142,6 +142,16 @@ function setup_build_dir() {
 	fi
 }
 
+function rebuild_local_conf() {
+	rm poky/build/conf/local.conf || exit 1
+    bash -c "cd poky; source ./oe-init-build-env > /dev/null" || exit 1
+
+	if [ ! -d "poky/build" ]; then
+	    echo "Error when creating poky build directory"
+	    exit 1
+	fi
+}
+
 function build() {
 	source oe-init-build-env
 	bitbake core-image-minimal
