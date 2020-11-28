@@ -6,6 +6,11 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+type src struct {
+	Module bool
+	Path   string
+}
+
 type repo struct {
 	Uri    string
 	Layers []string
@@ -16,6 +21,7 @@ type tomlConfig struct {
 	Release  string
 	Machine  string
 	Repo     []repo
+	Srcs     map[string]src
 }
 
 func parseConfig(f string) (tomlConfig, error) {

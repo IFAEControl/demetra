@@ -62,7 +62,7 @@ func setupLayers(b *basher.Context, layers []repo) {
 	}
 }
 
-func setupYocto(b *basher.Context, cfg tomlConfig) {
+func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 	b.Export("RELEASE", cfg.Release)
 	if b.HandleFuncs(os.Args) {
 		os.Exit(0)
@@ -100,6 +100,37 @@ func setupYocto(b *basher.Context, cfg tomlConfig) {
 		log.Fatal(err)
 	}
 
+	if external {
+		f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer f.Close()
+		if _, err := f.WriteString("INHERIT += \"externalsrc\"\n"); err != nil {
+			log.Fatal(err)
+		}
+
+		for key, value := range cfg.Srcs {
+			k := "EXTERNALSRC_pn" + key
+			path := value.Path
+
+			line := k + " = \"" + path + "\"\n"
+			if _, err := f.WriteString(line); err != nil {
+				log.Fatal(err)
+			}
+
+			if value.Module {
+				k := "EXTERNALSRC_BUILD_pn-" + key
+				path := value.Path
+				line := k + " = \"" + path + "\"\n"
+				if _, err := f.WriteString(line); err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	}
+
 	setupLayers(b, cfg.Repo)
 }
 
@@ -107,6 +138,7 @@ func main() {
 	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
 	build := getopt.BoolLong("build", 'b', "", "Build image")
 	release := getopt.StringLong("release", 'R', "", "Override defined release")
+	external := getopt.BoolLong("external", 'E', "Use external source tree")
 
 	getopt.Parse()
 
@@ -122,7 +154,7 @@ func main() {
 	bash, _ := basher.NewContext("/bin/bash", false)
 	bash.CopyEnv()
 
-	setupYocto(bash, cfg)
+	setupYocto(bash, cfg, *external)
 
 	// build
 	if *build {

@@ -6,3 +6,13 @@ machine = "zc702-zynq7"
 [[repo]]
 uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"
 layers = ["meta-gfa"]
+
+# Needed for external flag
+[srcs]
+	
+	# After the dot goes the yocto package name for which
+	# we want to use externalsrc
+	[srcs.gfa-server]
+	# If this source is of a module set this to true
+	module = false
+	path = "/home/david/Develop/Work/DESI/gfaserver"
