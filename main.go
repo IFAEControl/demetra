@@ -113,7 +113,7 @@ func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 
 		for key, value := range cfg.Srcs {
 			k := "EXTERNALSRC_pn" + key
-			path := value.Path
+			path := Expand(value.Path)
 
 			line := k + " = \"" + path + "\"\n"
 			if _, err := f.WriteString(line); err != nil {
@@ -122,7 +122,6 @@ func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 
 			if value.Module {
 				k := "EXTERNALSRC_BUILD_pn-" + key
-				path := value.Path
 				line := k + " = \"" + path + "\"\n"
 				if _, err := f.WriteString(line); err != nil {
 					log.Fatal(err)

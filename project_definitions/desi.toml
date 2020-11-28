@@ -10,3 +10,13 @@ layers = ["meta-enclustra"]
 [[repo]]
 uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"
 layers = ["meta-gfa"]
+
+# Needed for external flag
+[srcs]
+	
+	# After the dot goes the yocto package name for which
+	# we want to use externalsrc
+	[srcs.gfa-server]
+	# If this source is of a module set this to true
+	module = false
+	path = "~/Develop/Work/DESI/gfaserver"
