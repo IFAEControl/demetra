@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VALID_MACHINES="mercury-zx5 microzed-zynq7 zc702-zynq7"
+VALID_MACHINES="mercury-zx5 microzed-zynq7 zc702-zynq7 picozed-zynq7"
 
 function get_git_commit() {
    (

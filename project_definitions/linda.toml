@@ -1,0 +1,3 @@
+setup_dir = "linda_yocto"
+release = "zeus"
+machine = "picozed-zynq7"

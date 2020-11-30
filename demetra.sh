@@ -47,7 +47,6 @@ MISC OPTIONS
                     Note that your user should be on the docker group or be root.
 -P, --profile       Load the configuration from the given file (a profile)
 -v, --verbose       Verbose output (i.e: print current configuration)
--E, --external      Use external source tree.
 
 REMOTE OPTIONS
 --args              Append given args when invoking demetra.sh remotely
@@ -125,7 +124,7 @@ function build_docker() {
 }
 
 function build_local() {
-    ./scripts/prepare.sh "$MACHINE" "${PROJECT_DIRS[@]}" $external || exit 1
+    ./scripts/prepare.sh "$MACHINE" "${PROJECT_DIRS[@]}" || exit 1
 
     (
     cd poky || exit 1
@@ -217,8 +216,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-SHORT=hm:bdB:p:D:cCu:P:tSTvErR:,g,H:,l:,s
-LONG=help,machine:,build,docker,bitsream:,password:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,external,release:,git,hdf:,log:,shell,no-qspi,args:
+SHORT=hm:bdB:p:D:cCu:P:tSTvr:,g,H:,l:,s
+LONG=help,machine:,build,docker,bitsream:,password:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,release:,git,hdf:,log:,shell,no-qspi,args:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -240,7 +239,6 @@ pack=false
 sshcopy=false
 tests=false
 verbose=false
-external=false
 git=false
 shell=false
 noqspi=false
@@ -309,10 +307,6 @@ while true; do
             ;;
          -v|--verbose)
             verbose=true
-            shift
-            ;;
-         -E|--external)
-            external=true
             shift
             ;;
          -g|--git)
