@@ -168,6 +168,7 @@ function build_docker() {
        DOCKER_MOUNT_ARGS+=" -v $i:$i"
    done
 
+   # TODO mount external source dirs
     docker run -v "$(pwd)":"$(pwd)" \
 	       -w "$(pwd)" \
 	       --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \

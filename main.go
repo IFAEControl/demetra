@@ -38,7 +38,7 @@ func setupLayers(b *Bash, layers []repo) {
 	}
 }
 
-func setupYocto(b *Bash, cfg tomlConfig, external bool) {
+func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
 	b.Export("RELEASE", cfg.Release)
 	b.Source("scripts/helper_functions.sh")
 
@@ -56,6 +56,7 @@ func setupYocto(b *Bash, cfg tomlConfig, external bool) {
 	b.Run("setup_build_dir")
 	b.Run("rebuild_local_conf")
 	b.Run("checkout_machine", cfg.Machine)
+	b.Run("set_password", password)
 
 	err = os.Chdir("poky")
 	if err != nil {
@@ -92,6 +93,9 @@ func main() {
 	external := getopt.BoolLong("external", 'E', "Use external source tree")
 	docker := getopt.BoolLong("docker", 'd', "Use docker for executing the required action")
 
+	// XXX: This should not be plain text password
+	password := getopt.StringLong("password", 'p', "root", "Password for the root user")
+
 	getopt.Parse()
 
 	cfg, err := parseConfig(*proj_def)
@@ -105,7 +109,7 @@ func main() {
 
 	b := NewBash()
 
-	setupYocto(b, cfg, *external)
+	setupYocto(b, cfg, *external, *password)
 
 	// build
 	if *build {

@@ -7,7 +7,6 @@ MACHINE=microzed-zynq7
 SRC=poky/build/tmp/deploy/images
 SSH=172.16.12.251
 DEST=/tmp/sd/
-PASSWORD=root
 DEVICE=""
 BITSTREAM=~/gfa_fw_sim/petalinux/gfa_uzed7010_sim_2014.4/subsystems/linux/hw-description/design_1_wrapper.bit
 DEFAULT_IMAGE=core-image-minimal
@@ -25,7 +24,6 @@ cat << EOF
 YOCTO CONFIGURATION
 -m, --machine       Machine name. It only can be mercury-zx5 or microzed-zynq7 (default)
 -B, --bitstream     Bitstream location. It should be the full path to the bit file.
--p, --password      Password for the root user.
 -D, --dest          Destination directory to copy the output image
 -C, --clean         Recursively remove all files from destination before copy the image
 -u, --device        If not null, the given device will be automatically mounter/unmouted to destination directory
@@ -33,7 +31,6 @@ YOCTO CONFIGURATION
 -H, --hdf           HDF file (will override configured bitstream). If needed it will be forwarded
 
 ACTIONS
--b, --build         Build the machine
 -c, --copy          Copy the image
 -t, --pack          Pack the image
 -S, --ssh-copy      Copy the image remotely (by default it will copy the content to the SD and QSPI)
@@ -43,8 +40,6 @@ REMOTE UPDATE OPTIONS
 --no-qspi           Do not copy the new content to QSPI flash memory
 
 MISC OPTIONS
--d, --docker        Use docker for executing the required action
-                    Note that your user should be on the docker group or be root.
 -P, --profile       Load the configuration from the given file (a profile)
 -v, --verbose       Verbose output (i.e: print current configuration)
 
@@ -101,44 +96,6 @@ function repo_commit() {
     else
        echo "c$(get_git_commit "$1")"
     fi
-    ) || exit 1
-}
-
-function build_docker() {
-    docker build -f resources/docker/Dockerfile_base -t base-yocto . || exit 1
-   # XXX: If docker don't finish correctly we can have unused containers
-   CONTAINER_NAME="yocto-$(mktemp -u XXXXX)"
-    docker build -f resources/docker/Dockerfile_ssh --build-arg uid="$(id -ru)" -t yocto-build . || exit 1
-
-    DOCKER_MOUNT_ARGS=""
-    for i in "${PROJECT_DIRS[@]}"; do
-       DOCKER_MOUNT_ARGS+=" -v $i:$i"
-   done
-    docker run -v "$(pwd)":"$(pwd)" $DOCKER_MOUNT_ARGS \
-	       -w "$(pwd)" \
-	       --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
-	       --env-file "$profile" \
-	       --env-file ~/.gfayocto_config.env \
-               -it --rm --name $CONTAINER_NAME yocto-build \
-               ./demetra.sh -b -m "$MACHINE" -p "$PASSWORD" -R "$RELEASE" $($shell && echo "-s") $($external && echo -e "\x2dE") || exit 1
-}
-
-function build_local() {
-    ./scripts/prepare.sh "$MACHINE" "${PROJECT_DIRS[@]}" || exit 1
-
-    (
-    cd poky || exit 1
-    
-    # Change default root password
-    set_password "$PASSWORD"
-
-    source ./oe-init-build-env
-  
-    if $shell; then
-       bash
-    fi
-
-    bitbake "$DEFAULT_IMAGE" || exit 1
     ) || exit 1
 }
 
@@ -216,8 +173,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-SHORT=hm:bdB:p:D:cCu:P:tSTvr:,g,H:,l:,s
-LONG=help,machine:,build,docker,bitsream:,password:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,release:,git,hdf:,log:,shell,no-qspi,args:
+SHORT=hm:B:D:cCu:P:tSTvr:,g,H:,l:,s
+LONG=help,machine:,bitsream:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,release:,git,hdf:,log:,shell,no-qspi,args:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -233,7 +190,6 @@ eval set -- "$PARSED"
 
 docker=false
 copy=false
-build=false
 clean=false
 pack=false
 sshcopy=false
@@ -257,10 +213,6 @@ while true; do
             BITSTREAM=$2
             shift 2
             ;;
-        -p|--password)
-            PASSWORD=$2
-            shift 2
-            ;;
         -D|--dest)
             DEST=$2
             shift 2
@@ -280,10 +232,6 @@ while true; do
         -P|--profile)
             profile=$2
             shift 2
-            ;;
-        -b|--build)
-            build=true
-            shift
             ;;
         -c|--copy)
             copy=true
@@ -395,12 +343,6 @@ if $git; then
     git pull || exit
     clone_git_repos || exit
     update_git_repos || exit
-fi
-
-if $docker && $build; then
-	build_docker || exit 1
-elif $build; then
-    build_local || exit 1
 fi
 
 if $copy; then
