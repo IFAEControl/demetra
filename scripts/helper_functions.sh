@@ -21,14 +21,6 @@ function is_current_branch() {
     fi
 }
 
-function clean_repository() {
-	(
-		cd "$1" || exit 1
-		git checkout -- .
-		git clean -fd
-	)
-}
-
 function apply_patch() {
 	(
 		OLD="$(pwd)"
@@ -61,24 +53,10 @@ function install_package() {
 	fi
 }
 
-function clone() {
-	git -c http.sslVerify=false clone "$1" "$2" || exit $?
-}
-
-function update_repository() {
-	(
-		cd "$1" || exit 1
-		git -c http.sslVerify=false  pull || exit $?
-	)
-}
-
 function checkout_repository() {
-	(
-		cd "$1" || exit
-		if ! is_current_branch $2; then
-			git checkout $2
-		fi
- 	)
+	if ! is_current_branch $2; then
+		git checkout $2
+	fi
 }
 
 function symlink() {

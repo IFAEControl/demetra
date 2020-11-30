@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/pborman/getopt/v2"
 	"log"
 	"os"
-	"fmt"
 )
 
 func setupSingleLayer(b *Bash, uri, release string, clean bool, layers ...string) {
@@ -65,7 +65,7 @@ func cloneRepo(b *Bash, repo, directory string) string {
 			return directory
 		}
 
-		b.Run("clone", repo, directory)
+		b.Run("git", "clone", repo, directory)
 	} else {
 		directory = GetStem(repo)
 		cloneRepo(b, repo, directory)
@@ -81,14 +81,26 @@ func setupRepo(b *Bash, repo, directory, release string, clean bool) {
 
 	if !Exists(directory) {
 		directory = cloneRepo(b, repo, directory)
-	} 
-
-	if clean {
-		b.Run("clean_repository", directory)
 	}
 
-	b.Run("update_repository", directory)
-	b.Run("checkout_repository", directory, release)
+	old_dir, _ := os.Getwd()
+	err := os.Chdir(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if clean {
+		b.Run("git", "checkout", "--", ".")
+		b.Run("git", "clean", "-fd")
+	}
+
+	b.Run("git", "pull")
+	b.Run("checkout_repository", release)
+
+	err = os.Chdir(old_dir)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func setupYocto(b *Bash, cfg tomlConfig, external bool, password string, clean bool) {

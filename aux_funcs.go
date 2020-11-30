@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 	"os/user"
-	"strings"
 	"path"
+	"strings"
 )
 
 func Expand(path string) string {
