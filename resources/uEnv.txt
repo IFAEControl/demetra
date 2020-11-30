@@ -1,0 +1,7 @@
+kernel_image=uImage
+devicetree_image=devicetree.dtb
+ramdisk_image=uramdisk
+bitstream_image=fpga.bin
+ethaddr=00:0a:35:00:22:02
+bootargs=console=ttyPS0,115200 rw earlyprintk
+def_args=console=ttyPS0,115200 rw earlyprintk 

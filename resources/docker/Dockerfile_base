@@ -1,0 +1,23 @@
+FROM debian:stretch
+
+RUN apt-get update 
+RUN apt-get -y dist-upgrade
+
+# Yocto dependencies
+RUN apt-get install -y git python python3 locales diffstat texinfo bzip2 gawk chrpath wget cpio make gcc g++ lsb-release
+RUN apt-get install -y sshpass
+# Enclustra dependencies
+RUN apt-get install -y curl bc libelf-dev libpcre3-dev
+RUN git clone https://github.com/antmicro/zynq-mkbootimage; cd zynq-mkbootimage; make;  cp mkbootimage /usr/bin/
+
+# Xilinx workarounds
+RUN apt-get install -y screen
+
+# Qemu support
+RUN apt-get update
+RUN apt-get install -y sudo iptables
+
+RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen; locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8  

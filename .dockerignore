@@ -1,0 +1,4 @@
+# Save space and time ignoring all the things and including only what we will use
+*
+
+!docker_ed25519

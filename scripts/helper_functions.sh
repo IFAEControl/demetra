@@ -156,3 +156,21 @@ function build() {
 	source oe-init-build-env
 	bitbake core-image-minimal
 }
+
+function build_docker() {
+    docker build -f resources/docker/Dockerfile_base -t base-yocto . || exit 1
+   # XXX: If docker don't finish correctly we can have unused containers
+   CONTAINER_NAME="yocto-$(mktemp -u XXXXX)"
+    docker build -f resources/docker/Dockerfile_ssh --build-arg uid="$(id -ru)" -t yocto-build . || exit 1
+
+    DOCKER_MOUNT_ARGS=""
+    for i in "${PROJECT_DIRS[@]}"; do
+       DOCKER_MOUNT_ARGS+=" -v $i:$i"
+   done
+
+    docker run -v "$(pwd)":"$(pwd)" \
+	       -w "$(pwd)" \
+	       --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
+           -it --rm --name $CONTAINER_NAME yocto-build \
+           ./demetra $@ || exit 1
+}
