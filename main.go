@@ -4,6 +4,7 @@ import (
 	"github.com/pborman/getopt/v2"
 	"log"
 	"os"
+	"fmt"
 )
 
 func setupSingleLayer(b *Bash, uri string, layers ...string) {
@@ -38,6 +39,25 @@ func setupLayers(b *Bash, layers []repo) {
 	}
 }
 
+func setupBuildDir(b *Bash, sd string) {
+	build_dir := fmt.Sprint(sd, "/build")
+
+	if !Exists(build_dir) {
+		b.Run("bash", "-c", "cd poky; source ./oe-init-build-env > /dev/null")
+	}
+
+	if !Exists(build_dir) {
+		log.Fatal("Error when creating poky build directory")
+	}
+}
+
+func rebuildLocalCfg(b *Bash, sd string) {
+	local_conf := fmt.Sprint(sd, "/build/conf/local.conf")
+	// ignore error, if config not exist will be created
+	os.Remove(local_conf)
+	setupBuildDir(b, sd)
+}
+
 func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
 	b.Export("RELEASE", cfg.Release)
 	b.Source("scripts/helper_functions.sh")
@@ -52,9 +72,8 @@ func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
 		log.Fatal(err)
 	}
 
-	b.Run("clone", "git://git.yoctoproject.org/poky")
-	b.Run("setup_build_dir")
-	b.Run("rebuild_local_conf")
+	b.Run("clone", "git://git.yoctoproject.org/poky", cfg.SetupDir)
+	rebuildLocalCfg(b, cfg.SetupDir)
 	b.Run("checkout_machine", cfg.Machine)
 	b.Run("set_password", password)
 
