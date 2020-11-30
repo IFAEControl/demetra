@@ -1,75 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"github.com/pborman/getopt/v2"
 	"log"
 	"os"
-	"strings"
 )
 
-type LocalConf struct {
-}
-
-func (c LocalConf) append(line string) {
-	if c.contains(line) {
-		return
-	}
-
-	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-	if _, err := f.WriteString(line + "\n"); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (c LocalConf) contains(line string) bool {
-	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), line) {
-			return true
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return false
-}
-
-func (c LocalConf) set(key, val string) {
-	line := key + " = \"" + val + "\""
-
-	// If value already set return without doing anytying
-	if c.contains(line) {
-		return
-	}
-
-	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-	if _, err := f.WriteString(line + "\n"); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func setupSingleLayer(b *Bash, uri string, layers ...string) {
-	b.Run( "clone", uri)
+	b.Run("clone", uri)
 	for _, l := range layers {
 		b.Run("check_layer", l)
 	}
@@ -124,7 +62,9 @@ func setupYocto(b *Bash, cfg tomlConfig, external bool) {
 		log.Fatal(err)
 	}
 
-	conf := LocalConf{}
+	conf := NewLocalConf()
+	defer conf.Close()
+
 	if external {
 		conf.append("INHERIT += \"externalsrc\"")
 
@@ -170,12 +110,12 @@ func main() {
 	// build
 	if *build {
 		if *docker {
-			err = os.Chdir(old_dir) 
+			err = os.Chdir(old_dir)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			b.Run("build_docker", "-P " + *proj_def, "-b")
+			b.Run("build_docker", "-P "+*proj_def, "-b")
 		} else {
 			b.Run("build")
 		}

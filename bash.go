@@ -33,8 +33,6 @@ func (b Bash) Export(key, value string) {
 	b.ctx.Export(key, value)
 }
 
-
-
 func (b Bash) Run(cmd string, args ...string) {
 	err := b.runCommand(cmd, args)
 	if err != nil {
