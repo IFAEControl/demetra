@@ -43,7 +43,8 @@ func setupBuildDir(b *Bash, sd string) {
 	build_dir := fmt.Sprint(sd, "/build")
 
 	if !Exists(build_dir) {
-		b.Run("bash", "-c", "cd poky; source ./oe-init-build-env > /dev/null")
+		cmd := fmt.Sprint("cd ", sd, "; source ./oe-init-build-env > /dev/null")
+		b.Run("bash", "-c", cmd)
 	}
 
 	if !Exists(build_dir) {
@@ -62,25 +63,16 @@ func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
 	b.Export("RELEASE", cfg.Release)
 	b.Source("scripts/helper_functions.sh")
 
-	err := os.MkdirAll(cfg.SetupDir, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = os.Chdir(cfg.SetupDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	b.Run("clone", "git://git.yoctoproject.org/poky", cfg.SetupDir)
 	rebuildLocalCfg(b, cfg.SetupDir)
-	b.Run("checkout_machine", cfg.Machine)
-	b.Run("set_password", password)
 
-	err = os.Chdir("poky")
+	err := os.Chdir(cfg.SetupDir)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	b.Run("checkout_machine", cfg.Machine)
+	b.Run("set_password", password)
 
 	conf := NewLocalConf()
 	defer conf.Close()

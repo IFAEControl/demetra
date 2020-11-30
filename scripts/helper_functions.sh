@@ -37,14 +37,14 @@ function apply_patch() {
 }
 
 function set_password() {
-	if ! grep 'INHERIT += "extrausers"' build/conf/local.conf > /dev/null; then
-  		echo 'INHERIT += "extrausers"' >> build/conf/local.conf
+	if ! grep 'INHERIT += "extrausers"' conf/local.conf > /dev/null; then
+  		echo 'INHERIT += "extrausers"' >> conf/local.conf
 	fi
 
 	TEMP_FILE=$(mktemp)
-	grep -v 'EXTRA_USERS_PARAMS = \"usermod' build/conf/local.conf > "$TEMP_FILE"
+	grep -v 'EXTRA_USERS_PARAMS = \"usermod' conf/local.conf > "$TEMP_FILE"
 	echo -e "EXTRA_USERS_PARAMS = \"usermod -P $PASSWORD root;\"" >> "$TEMP_FILE"
-	mv "$TEMP_FILE" build/conf/local.conf
+	mv "$TEMP_FILE" conf/local.conf
 }
 
 function date_last_commit() {
@@ -60,7 +60,7 @@ function install_package() {
 	fi
 }
 
-function clone_do() {
+function clone() {
    if [ -z "${RELEASE+x}" ]; then
       echo "RELEASE must be set"
       exit
@@ -70,35 +70,17 @@ function clone_do() {
 	DIR=$(echo "$DIR" | sed 's/.git//g')
 
 	if [ ! -d "$DIR" ]; then
-		git -c http.sslVerify=false clone "$1" || exit $?
+		git -c http.sslVerify=false clone "$1" "$2" || exit $?
 	fi
 	cd  "$DIR" || exit 1
 
 	[ "$DIR" != "meta-gfa" ] && [ "$DIR" != "meta-enclustra" ] && clean_repository
 	git -c http.sslVerify=false  pull || exit $?
 
-	if [ "$2" != "" ]; then
-		git checkout "$2"
-	else
-		if ! is_current_branch $RELEASE; then
-			git checkout $RELEASE
-		fi
+	if ! is_current_branch $RELEASE; then
+		git checkout $RELEASE
 	fi
-
 	cd .. || exit
-}
-
-function clone() {
-	DIR=$(echo "$1" | rev | cut -d '/' -f 1 | rev)
-
-	if [ "$(pwd | rev | cut -d '/' -f 1 | rev)" != "poky" ] && [ "$DIR" != "poky" ]; then
-		cd poky || exit
-		clone_do "$1" "$2"
-		cd ..
-	else 
-		clone_do "$1" "$2"
-	fi
-		
 }
 
 function symlink() {
@@ -116,8 +98,8 @@ function check_machine() {
 
 function checkout_machine() {
 	check_machine "$1"
-	if ! grep "\"$1\"" poky/build/conf/local.conf > /dev/null; then
-		sed -i "s/^\(MACHINE ??= \).*/\1\"$1\"/" poky/build/conf/local.conf
+	if ! grep "\"$1\"" build/conf/local.conf > /dev/null; then
+		sed -i "s/^\(MACHINE ??= \).*/\1\"$1\"/" build/conf/local.conf
 	fi
 }
 
