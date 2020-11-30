@@ -23,6 +23,7 @@ function is_current_branch() {
 
 function clean_repository() {
 	(
+		cd "$1" || exit 1
 		git checkout -- .
 		git clean -fd
 	)
@@ -37,14 +38,14 @@ function apply_patch() {
 }
 
 function set_password() {
-	if ! grep 'INHERIT += "extrausers"' conf/local.conf > /dev/null; then
-  		echo 'INHERIT += "extrausers"' >> conf/local.conf
+	if ! grep 'INHERIT += "extrausers"' build/conf/local.conf > /dev/null; then
+  		echo 'INHERIT += "extrausers"' >> build/conf/local.conf
 	fi
 
 	TEMP_FILE=$(mktemp)
-	grep -v 'EXTRA_USERS_PARAMS = \"usermod' conf/local.conf > "$TEMP_FILE"
+	grep -v 'EXTRA_USERS_PARAMS = \"usermod' build/conf/local.conf > "$TEMP_FILE"
 	echo -e "EXTRA_USERS_PARAMS = \"usermod -P $PASSWORD root;\"" >> "$TEMP_FILE"
-	mv "$TEMP_FILE" conf/local.conf
+	mv "$TEMP_FILE" build/conf/local.conf
 }
 
 function date_last_commit() {
@@ -61,26 +62,23 @@ function install_package() {
 }
 
 function clone() {
-   if [ -z "${RELEASE+x}" ]; then
-      echo "RELEASE must be set"
-      exit
-   fi
+	git -c http.sslVerify=false clone "$1" "$2" || exit $?
+}
 
-	DIR=$(echo "$1" | rev | cut -d '/' -f 1 | rev)
-	DIR=$(echo "$DIR" | sed 's/.git//g')
+function update_repository() {
+	(
+		cd "$1" || exit 1
+		git -c http.sslVerify=false  pull || exit $?
+	)
+}
 
-	if [ ! -d "$DIR" ]; then
-		git -c http.sslVerify=false clone "$1" "$2" || exit $?
-	fi
-	cd  "$DIR" || exit 1
-
-	[ "$DIR" != "meta-gfa" ] && [ "$DIR" != "meta-enclustra" ] && clean_repository
-	git -c http.sslVerify=false  pull || exit $?
-
-	if ! is_current_branch $RELEASE; then
-		git checkout $RELEASE
-	fi
-	cd .. || exit
+function checkout_repository() {
+	(
+		cd "$1" || exit
+		if ! is_current_branch $2; then
+			git checkout $2
+		fi
+ 	)
 }
 
 function symlink() {

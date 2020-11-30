@@ -7,14 +7,14 @@ import (
 	"fmt"
 )
 
-func setupSingleLayer(b *Bash, uri string, layers ...string) {
-	b.Run("clone", uri)
+func setupSingleLayer(b *Bash, uri, release string, clean bool, layers ...string) {
+	setupRepo(b, uri, "", release, clean)
 	for _, l := range layers {
 		b.Run("check_layer", l)
 	}
 }
 
-func setupLayers(b *Bash, layers []repo) {
+func setupLayers(b *Bash, layers []repo, release string, clear bool) {
 	// first setup default layers
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
@@ -30,12 +30,12 @@ func setupLayers(b *Bash, layers []repo) {
 	}
 
 	for _, l := range default_layers {
-		setupSingleLayer(b, l.Uri, l.Layers...)
+		setupSingleLayer(b, l.Uri, release, clear, l.Layers...)
 	}
 
 	// then setup extra layers
 	for _, l := range layers {
-		setupSingleLayer(b, l.Uri, l.Layers...)
+		setupSingleLayer(b, l.Uri, release, clear, l.Layers...)
 	}
 }
 
@@ -59,11 +59,42 @@ func rebuildLocalCfg(b *Bash, sd string) {
 	setupBuildDir(b, sd)
 }
 
-func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
-	b.Export("RELEASE", cfg.Release)
+func cloneRepo(b *Bash, repo, directory string) string {
+	if directory != "" {
+		if Exists(directory) {
+			return directory
+		}
+
+		b.Run("clone", repo, directory)
+	} else {
+		directory = GetStem(repo)
+		cloneRepo(b, repo, directory)
+	}
+
+	return directory
+}
+
+func setupRepo(b *Bash, repo, directory, release string, clean bool) {
+	if directory == "" {
+		directory = GetStem(repo)
+	}
+
+	if !Exists(directory) {
+		directory = cloneRepo(b, repo, directory)
+	} 
+
+	if clean {
+		b.Run("clean_repository", directory)
+	}
+
+	b.Run("update_repository", directory)
+	b.Run("checkout_repository", directory, release)
+}
+
+func setupYocto(b *Bash, cfg tomlConfig, external bool, password string, clean bool) {
 	b.Source("scripts/helper_functions.sh")
 
-	b.Run("clone", "git://git.yoctoproject.org/poky", cfg.SetupDir)
+	setupRepo(b, "git://git.yoctoproject.org/poky", cfg.SetupDir, cfg.Release, clean)
 	rebuildLocalCfg(b, cfg.SetupDir)
 
 	err := os.Chdir(cfg.SetupDir)
@@ -92,10 +123,12 @@ func setupYocto(b *Bash, cfg tomlConfig, external bool, password string) {
 		}
 	}
 
-	setupLayers(b, cfg.Repo)
+	setupLayers(b, cfg.Repo, cfg.Release, clean)
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	old_dir, _ := os.Getwd()
 
 	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
@@ -103,6 +136,7 @@ func main() {
 	release := getopt.StringLong("release", 'R', "", "Override defined release")
 	external := getopt.BoolLong("external", 'E', "Use external source tree")
 	docker := getopt.BoolLong("docker", 'd', "Use docker for executing the required action")
+	no_clean := getopt.BoolLong("no-clean", 0, "Don't remove changes on layers")
 
 	// XXX: This should not be plain text password
 	password := getopt.StringLong("password", 'p', "root", "Password for the root user")
@@ -120,7 +154,7 @@ func main() {
 
 	b := NewBash()
 
-	setupYocto(b, cfg, *external, *password)
+	setupYocto(b, cfg, *external, *password, !*no_clean)
 
 	// build
 	if *build {

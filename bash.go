@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"github.com/progrium/go-basher"
-	"log"
 	"os"
 	"strconv"
 )
@@ -36,7 +35,7 @@ func (b Bash) Export(key, value string) {
 func (b Bash) Run(cmd string, args ...string) {
 	err := b.runCommand(cmd, args)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 

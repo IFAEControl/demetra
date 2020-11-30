@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/user"
 	"strings"
+	"path"
 )
 
 func Expand(path string) string {
@@ -21,4 +22,9 @@ func Exists(name string) bool {
 		return false
 	}
 	return true
+}
+
+func GetStem(uri string) string {
+	fname := path.Base(uri)
+	return strings.Split(fname, ".")[0]
 }
