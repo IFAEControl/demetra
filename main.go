@@ -2,14 +2,10 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"github.com/pborman/getopt/v2"
 	"log"
 	"os"
-	"strconv"
 	"strings"
-
-	"github.com/progrium/go-basher"
 )
 
 type LocalConf struct {
@@ -72,34 +68,14 @@ func (c LocalConf) set(key, val string) {
 	}
 }
 
-func runCommand(b *basher.Context, cmd string, args []string) error {
-	status, err := b.Run(cmd, args)
-	if err != nil {
-		return err
-	}
-
-	if status != 0 {
-		return errors.New("Unknown return number: " + strconv.Itoa(status))
-	}
-
-	return nil
-}
-
-func setupSingleLayer(b *basher.Context, uri string, layers ...string) {
-	err := runCommand(b, "clone", []string{uri})
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func setupSingleLayer(b *Bash, uri string, layers ...string) {
+	b.Run( "clone", uri)
 	for _, l := range layers {
-		err = runCommand(b, "check_layer", []string{l})
-		if err != nil {
-			log.Fatal(err)
-		}
+		b.Run("check_layer", l)
 	}
 }
 
-func setupLayers(b *basher.Context, layers []repo) {
+func setupLayers(b *Bash, layers []repo) {
 	// first setup default layers
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
@@ -124,13 +100,9 @@ func setupLayers(b *basher.Context, layers []repo) {
 	}
 }
 
-func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
+func setupYocto(b *Bash, cfg tomlConfig, external bool) {
 	b.Export("RELEASE", cfg.Release)
-	if b.HandleFuncs(os.Args) {
-		os.Exit(0)
-	}
-
-	b.Source("scripts/helper_functions.sh", nil)
+	b.Source("scripts/helper_functions.sh")
 
 	err := os.MkdirAll(cfg.SetupDir, os.ModePerm)
 	if err != nil {
@@ -142,25 +114,10 @@ func setupYocto(b *basher.Context, cfg tomlConfig, external bool) {
 		log.Fatal(err)
 	}
 
-	err = runCommand(b, "clone", []string{"git://git.yoctoproject.org/poky"})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = runCommand(b, "setup_build_dir", []string{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = runCommand(b, "rebuild_local_conf", []string{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = runCommand(b, "checkout_machine", []string{cfg.Machine})
-	if err != nil {
-		log.Fatal(err)
-	}
+	b.Run("clone", "git://git.yoctoproject.org/poky")
+	b.Run("setup_build_dir")
+	b.Run("rebuild_local_conf")
+	b.Run("checkout_machine", cfg.Machine)
 
 	err = os.Chdir("poky")
 	if err != nil {
@@ -206,10 +163,9 @@ func main() {
 		cfg.Release = *release
 	}
 
-	bash, _ := basher.NewContext("/bin/bash", false)
-	bash.CopyEnv()
+	b := NewBash()
 
-	setupYocto(bash, cfg, *external)
+	setupYocto(b, cfg, *external)
 
 	// build
 	if *build {
@@ -219,16 +175,9 @@ func main() {
 				log.Fatal(err)
 			}
 
-			args := []string{"-P " + *proj_def, "-b"}
-			err = runCommand(bash, "build_docker", args)
-			if err != nil {
-				log.Fatal(err)
-			}
+			b.Run("build_docker", "-P " + *proj_def, "-b")
 		} else {
-			err = runCommand(bash, "build", []string{})
-			if err != nil {
-				log.Fatal(err)
-			}
+			b.Run("build")
 		}
 	}
 }
