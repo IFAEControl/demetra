@@ -94,7 +94,7 @@ function build() {
 	bitbake core-image-minimal
 }
 
-function build_docker() {
+function dockerized_run() {
     docker build -f resources/docker/Dockerfile_base -t base-yocto . || exit 1
    # XXX: If docker don't finish correctly we can have unused containers
    CONTAINER_NAME="yocto-$(mktemp -u XXXXX)"

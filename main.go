@@ -9,8 +9,6 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	old_dir, _ := os.Getwd()
-
 	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
 	build := getopt.BoolLong("build", 'b', "", "Build image")
 	release := getopt.StringLong("release", 'R', "", "Override defined release")
@@ -24,6 +22,21 @@ func main() {
 
 	getopt.Parse()
 
+	b := NewBash()
+
+	if *docker {
+		var args []string
+		for _, v := range os.Args[1:] {
+			if v != "--docker" && v != "-d" {
+				args = append(args, v)
+			}
+		}
+
+		// Run this program inside container and exit
+		b.Run("dockerized_run", args...)
+		os.Exit(0)
+	}
+
 	cfg, err := parseConfig(*proj_def)
 	if err != nil {
 		log.Fatal(err)
@@ -35,32 +48,12 @@ func main() {
 		cfg.Release = *release
 	}
 
-	b := NewBash()
-
 	yocto := Yocto{b, cfg, *external, *password, !*no_clean}
 	yocto.setupYocto()
 
 	// build
 	if *build {
-		if *docker {
-			err = os.Chdir(old_dir)
-			if err != nil {
-				log.Fatal(err)
-			}
-			var args []string
-			for _, v := range os.Args[1:] {
-				if v != "--docker" && v != "-d" {
-					args = append(args, v)
-				}
-			}
-
-			b.Run("build_docker", args...)
-		} else {
-			if *shell {
-				b.Run("bash")
-			}
-			b.Run("build")
-		}
+		yocto.BuildImage(*shell)
 	}
 }
 

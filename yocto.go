@@ -143,3 +143,10 @@ func (y Yocto) setupYocto() {
 
 	y.setupLayers(y.cfg.Repo, y.cfg.Release)
 }
+
+func (y Yocto) BuildImage(shell bool) {
+	if shell {
+		y.b.Run("bash")
+	}
+	y.b.Run("build")
+}
