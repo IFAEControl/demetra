@@ -39,7 +39,6 @@ REMOTE UPDATE OPTIONS
 --no-qspi           Do not copy the new content to QSPI flash memory
 
 MISC OPTIONS
--P, --profile       Load the configuration from the given file (a profile)
 -v, --verbose       Verbose output (i.e: print current configuration)
 
 REMOTE OPTIONS
@@ -47,8 +46,6 @@ REMOTE OPTIONS
 
 ADVANCED OPTIONS
 -l, --log           When packing, add new version to yocto log file with the given comment (requires --pack)
--s, --shell         Spawn a shell just before start compiling, useful for example for when needing to configure
-                    the linux kernel inside a docker container.
 EOF
 exit 2
 }
@@ -152,8 +149,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-SHORT=hB:D:cCu:P:tSTv,H:,l:,s
-LONG=help,bitsream:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,hdf:,log:,shell,no-qspi,args:
+SHORT=hB:D:cCu:tSTv,H:,l:
+LONG=help,bitsream:,dest:,copy,clean,device:,pack,ssh-copy,test,verbose,hdf:,log:,no-qspi,args:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -167,14 +164,12 @@ fi
 # use eval with "$PARSED" to properly handle the quoting
 eval set -- "$PARSED"
 
-docker=false
 copy=false
 clean=false
 pack=false
 sshcopy=false
 tests=false
 verbose=false
-shell=false
 noqspi=false
 
 while true; do
@@ -197,14 +192,6 @@ while true; do
 	        ;;
         -u|--device)
             DEVICE=$2
-            shift 2
-            ;;
-        -d|--docker)
-            docker=true
-            shift
-            ;;
-        -P|--profile)
-            profile=$2
             shift 2
             ;;
         -c|--copy)
@@ -239,10 +226,6 @@ while true; do
             LOG_COMMENT="$2"
             shift 2
             ;;
-         -s|--shell)
-            shell=true
-            shift
-            ;;
          --no-qspi)
             noqspi=true
             shift
@@ -262,14 +245,6 @@ while true; do
     esac
 done
 return
-
-# If a profile is given, then we will use that configuration
-if [ "${profile+x}" ]; then
-    source "$profile" 
-else
-    # Dummy profile
-    profile="/dev/null"
-fi
 
 if $verbose; then
 cat <<EOF 
