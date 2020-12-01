@@ -54,8 +54,8 @@ function install_package() {
 }
 
 function checkout_repository() {
-	if ! is_current_branch $2; then
-		git checkout $2
+	if ! is_current_branch $1; then
+		git checkout $1
 	fi
 }
 

@@ -46,8 +46,14 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			var args []string
+			for _, v := range os.Args[1:] {
+				if v != "--docker" && v != "-d" {
+					args = append(args, v)
+				}
+			}
 
-			b.Run("build_docker", "-P "+*proj_def, "-b")
+			b.Run("build_docker", args...)
 		} else {
 			b.Run("build")
 		}
