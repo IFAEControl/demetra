@@ -47,12 +47,11 @@ func (y Yocto) setupLayers(layers []repo, release string) {
 }
 
 func (y Yocto) setupBuildDir(sd string) {
+
 	build_dir := fmt.Sprint(sd, "/build")
 
-	if !Exists(build_dir) {
-		cmd := fmt.Sprint("cd ", sd, "; source ./oe-init-build-env > /dev/null")
-		y.b.Run("bash", "-c", cmd)
-	}
+	cmd := fmt.Sprint("cd ", sd, "; source ./oe-init-build-env > /dev/null")
+	y.b.Run("bash", "-c", cmd)
 
 	if !Exists(build_dir) {
 		log.Fatal("Error when creating poky build directory")
