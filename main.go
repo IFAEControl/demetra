@@ -28,6 +28,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cfg.SetupDir = Expand(cfg.SetupDir)
+
 	if *release != "" {
 		cfg.Release = *release
 	}

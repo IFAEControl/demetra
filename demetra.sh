@@ -22,7 +22,6 @@ cat << EOF
 -h, --help          Show this message
 
 YOCTO CONFIGURATION
--m, --machine       Machine name. It only can be mercury-zx5 or microzed-zynq7 (default)
 -B, --bitstream     Bitstream location. It should be the full path to the bit file.
 -D, --dest          Destination directory to copy the output image
 -C, --clean         Recursively remove all files from destination before copy the image
@@ -47,8 +46,6 @@ REMOTE OPTIONS
 --args              Append given args when invoking demetra.sh remotely
 
 ADVANCED OPTIONS
--R, --release       Specify a yocto release. By default sumo is used
--g, --git           Pull all gfa repositories (WARNING: It will discard any changes made to those repositories)
 -l, --log           When packing, add new version to yocto log file with the given comment (requires --pack)
 -s, --shell         Spawn a shell just before start compiling, useful for example for when needing to configure
                     the linux kernel inside a docker container.
@@ -108,31 +105,13 @@ function clone_single_repo() {
     )
 }
 
-function clone_git_repos() {
-#    clone_single_repo "$MODULE_DIR" "git@gitlab.pic.es:DESI-GFA/gfa_module.git" || exit 1
-	exit 0
-}
-
-function update_git_repos() {
-    for i in "${PROJECT_DIRS[@]}"; do
-    (
-        cd "$i" || exit 1
-        git clean -fd . || exit 1
-        git checkout -- . || exit 1
-        git pull || exit 1
-    )
-    done
-}
-
 function do_copy() {
-    check_machine "$MACHINE"
     scripts/copy.sh "$DEST" "$SRC" "$DEVICE" "$MACHINE" "$BITSTREAM" "$clean" ||
     sudo scripts/copy.sh "$DEST" "$SRC" "$DEVICE" "$MACHINE" "$BITSTREAM" "$clean" ||
     su -c "scripts/copy.sh $DEST $SRC $DEVICE $MACHINE $BITSTREAM $clean"
 }
 
 function do_sshcopy() {
-    check_machine "$MACHINE"
     scripts/ssh-copy.sh "$SRC" "$MACHINE" "$BITSTREAM" "$PASSWORD" "$SSH" "$noqspi" || exit 1
 }
 
@@ -173,8 +152,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-SHORT=hm:B:D:cCu:P:tSTvr:,g,H:,l:,s
-LONG=help,machine:,bitsream:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,release:,git,hdf:,log:,shell,no-qspi,args:
+SHORT=hB:D:cCu:P:tSTv,H:,l:,s
+LONG=help,bitsream:,dest:,copy,clean,device:,profile:,pack,ssh-copy,test,verbose,hdf:,log:,shell,no-qspi,args:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -195,7 +174,6 @@ pack=false
 sshcopy=false
 tests=false
 verbose=false
-git=false
 shell=false
 noqspi=false
 
@@ -204,10 +182,6 @@ while true; do
         -h|--help)
             showHelp
             shift
-            ;;
-        -m|--machine)
-            MACHINE=$2
-            shift 2
             ;;
         -B|--bitstream)
             BITSTREAM=$2
@@ -257,14 +231,6 @@ while true; do
             verbose=true
             shift
             ;;
-         -g|--git)
-            git=true
-            shift
-            ;;
-         -R|--release)
-            RELEASE=$2
-            shift 2
-            ;;
          -H|--hdf)
             HDF=$2
             shift 2
@@ -297,8 +263,6 @@ while true; do
 done
 return
 
-#./scripts/download.sh "$RELEASE" || exit 1
-
 # If a profile is given, then we will use that configuration
 if [ "${profile+x}" ]; then
     source "$profile" 
@@ -311,7 +275,6 @@ if $verbose; then
 cat <<EOF 
 Current values
 ================================================================================
-MACHINE="$MACHINE" 
 SRC="$SRC"
 SSH="$SSH"
 DEST="$DEST"
@@ -324,7 +287,6 @@ LIBRARY_DIR="$LIBRARY_DIR"
 SERVER_DIR="$SERVER_DIR"
 XADC_TEST_DIR="$XADC_TEST_DIR"
 MCP_DIR="$MCP_DIR"
-RELEASE="$RELEASE"
 HDF="$HDF"
 EXTRA_ARGS="$EXTRA_ARGS"
 ================================================================================
@@ -337,12 +299,6 @@ fi
 # Copy hdf
 if [[ ! -z "$HDF" ]]; then
 	extract_hdf "$HDF" || exit 1
-fi
-
-if $git; then
-    git pull || exit
-    clone_git_repos || exit
-    update_git_repos || exit
 fi
 
 if $copy; then
