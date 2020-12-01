@@ -17,6 +17,7 @@ func main() {
 	external := getopt.BoolLong("external", 'E', "Use external source tree")
 	docker := getopt.BoolLong("docker", 'd', "Use docker for executing the required action")
 	no_clean := getopt.BoolLong("no-clean", 0, "Don't remove changes on layers")
+	shell := getopt.BoolLong("shell", 's', "Spawn a shell just before start compiling")
 
 	// XXX: This should not be plain text password
 	password := getopt.StringLong("password", 'p', "root", "Password for the root user")
@@ -55,6 +56,9 @@ func main() {
 
 			b.Run("build_docker", args...)
 		} else {
+			if *shell {
+				b.Run("bash")
+			}
 			b.Run("build")
 		}
 	}

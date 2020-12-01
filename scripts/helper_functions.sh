@@ -36,7 +36,7 @@ function set_password() {
 
 	TEMP_FILE=$(mktemp)
 	grep -v 'EXTRA_USERS_PARAMS = \"usermod' build/conf/local.conf > "$TEMP_FILE"
-	echo -e "EXTRA_USERS_PARAMS = \"usermod -P $PASSWORD root;\"" >> "$TEMP_FILE"
+	echo -e "EXTRA_USERS_PARAMS = \"usermod -P $1 root;\"" >> "$TEMP_FILE"
 	mv "$TEMP_FILE" build/conf/local.conf
 }
 
