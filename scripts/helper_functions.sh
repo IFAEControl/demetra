@@ -59,12 +59,6 @@ function checkout_repository() {
 	fi
 }
 
-function symlink() {
-	#Make sure that the symbolic link will point to a valid directory
-	rm "$2" 2> /dev/null
-	ln -s "$1" "$2" || exit
-}
-
 function check_machine() {
 	if [[ ! $VALID_MACHINES =~ (^|[[:space:]])"$1"($|[[:space:]]) ]] ; then
 	    echo "Invalid machine name. Exiting"
