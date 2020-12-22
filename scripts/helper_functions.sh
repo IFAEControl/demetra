@@ -102,7 +102,7 @@ function dockerized_run() {
    # TODO mount external source dirs
     docker run -v "$(pwd)":"$(pwd)" \
 	       -w "$(pwd)" \
-	       --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun \
+	       --cap-add=NET_ADMIN --network=host --device /dev/net/tun:/dev/net/tun \
            -it --rm --name $CONTAINER_NAME yocto-build \
            ./demetra $@ || exit 1
 }
