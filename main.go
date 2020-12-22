@@ -33,6 +33,7 @@ func main() {
 		}
 
 		// Run this program inside container and exit
+		b.Source("scripts/helper_functions.sh")
 		b.Run("dockerized_run", args...)
 		os.Exit(0)
 	}
