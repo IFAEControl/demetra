@@ -9,6 +9,13 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
+	// Regarding the bit vs bin files (we currently convert from bit format to bin)
+	// bit and bin are identical at bit level the only difference is that the one have
+	// a header and the second one doesn't. It supposed that the FFFFF after the header
+	// resets the FPGA, so any possible change introduced by reading the header is ignored.
+	// If that is true, I don't know why we needed to convert it.
+
+	bitstream := getopt.StringLong("bitstream", 'B', "", "Bitstream location")
 	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
 	build := getopt.BoolLong("build", 'b', "", "Build image")
 	release := getopt.StringLong("release", 'R', "", "Override defined release")
@@ -56,6 +63,14 @@ func main() {
 	if *build {
 		yocto.BuildImage(*shell)
 	}
+
+	// Prepare directory where firmware image will be hold temporarily
+	dir, err := ioutil.TempDir("", "demetra")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
 }
 
 /*package main

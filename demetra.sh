@@ -11,7 +11,6 @@ DEVICE=""
 BITSTREAM=~/gfa_fw_sim/petalinux/gfa_uzed7010_sim_2014.4/subsystems/linux/hw-description/design_1_wrapper.bit
 DEFAULT_IMAGE=core-image-minimal
 
-EXTRA_ARGS=""
 RELEASE=dunfell
 YOCTO_LOG_FILE="/tmp/yocto_log.csv" # Set the correct value in ~/.gfayocto_config.env
 
@@ -40,9 +39,6 @@ REMOTE UPDATE OPTIONS
 
 MISC OPTIONS
 -v, --verbose       Verbose output (i.e: print current configuration)
-
-REMOTE OPTIONS
---args              Append given args when invoking demetra.sh remotely
 
 ADVANCED OPTIONS
 -l, --log           When packing, add new version to yocto log file with the given comment (requires --pack)
@@ -150,7 +146,7 @@ if [[ $? -ne 4 ]]; then
 fi
 
 SHORT=hB:D:cCu:tSTv,H:,l:
-LONG=help,bitsream:,dest:,copy,clean,device:,pack,ssh-copy,test,verbose,hdf:,log:,no-qspi,args:
+LONG=help,bitsream:,dest:,copy,clean,device:,pack,ssh-copy,test,verbose,hdf:,log:,no-qspi:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -230,10 +226,6 @@ while true; do
             noqspi=true
             shift
             ;;
-         --args)
-            EXTRA_ARGS="$2"
-            shift 2
-            ;;
          --)
             shift
             break
@@ -263,7 +255,6 @@ SERVER_DIR="$SERVER_DIR"
 XADC_TEST_DIR="$XADC_TEST_DIR"
 MCP_DIR="$MCP_DIR"
 HDF="$HDF"
-EXTRA_ARGS="$EXTRA_ARGS"
 ================================================================================
 EOF
     echo "Press a key to continue"
