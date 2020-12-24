@@ -6,10 +6,7 @@ source scripts/helper_functions.sh
 MACHINE=microzed-zynq7
 SRC=poky/build/tmp/deploy/images
 SSH=172.16.12.251
-DEST=/tmp/sd/
 DEVICE=""
-BITSTREAM=~/gfa_fw_sim/petalinux/gfa_uzed7010_sim_2014.4/subsystems/linux/hw-description/design_1_wrapper.bit
-DEFAULT_IMAGE=core-image-minimal
 
 RELEASE=dunfell
 YOCTO_LOG_FILE="/tmp/yocto_log.csv" # Set the correct value in ~/.gfayocto_config.env
@@ -21,24 +18,18 @@ cat << EOF
 -h, --help          Show this message
 
 YOCTO CONFIGURATION
--B, --bitstream     Bitstream location. It should be the full path to the bit file.
--D, --dest          Destination directory to copy the output image
 -C, --clean         Recursively remove all files from destination before copy the image
 -u, --device        If not null, the given device will be automatically mounter/unmouted to destination directory
                     Format can be in the form of /dev/sdX or UUID="x-y" (e.g: 'dev/sdz' or 'UUID="53AC-34FD"')
 -H, --hdf           HDF file (will override configured bitstream). If needed it will be forwarded
 
 ACTIONS
--c, --copy          Copy the image
 -t, --pack          Pack the image
 -S, --ssh-copy      Copy the image remotely (by default it will copy the content to the SD and QSPI)
 -T, --test          Run gfa tests
 
 REMOTE UPDATE OPTIONS
 --no-qspi           Do not copy the new content to QSPI flash memory
-
-MISC OPTIONS
--v, --verbose       Verbose output (i.e: print current configuration)
 
 ADVANCED OPTIONS
 -l, --log           When packing, add new version to yocto log file with the given comment (requires --pack)
@@ -98,12 +89,6 @@ function clone_single_repo() {
     )
 }
 
-function do_copy() {
-    scripts/copy.sh "$DEST" "$SRC" "$DEVICE" "$MACHINE" "$BITSTREAM" "$clean" ||
-    sudo scripts/copy.sh "$DEST" "$SRC" "$DEVICE" "$MACHINE" "$BITSTREAM" "$clean" ||
-    su -c "scripts/copy.sh $DEST $SRC $DEVICE $MACHINE $BITSTREAM $clean"
-}
-
 function do_sshcopy() {
     scripts/ssh-copy.sh "$SRC" "$MACHINE" "$BITSTREAM" "$PASSWORD" "$SSH" "$noqspi" || exit 1
 }
@@ -145,8 +130,8 @@ if [[ $? -ne 4 ]]; then
     exit 1
 fi
 
-SHORT=hB:D:cCu:tSTv,H:,l:
-LONG=help,bitsream:,dest:,copy,clean,device:,pack,ssh-copy,test,verbose,hdf:,log:,no-qspi:
+SHORT=hCu:tSTH:,l:
+LONG=help,clean,device:,pack,ssh-copy,test,hdf:,log:,no-qspi:
 
 # -temporarily store output to be able to check for errors
 # -activate advanced mode getopt quoting e.g. via “--options”
@@ -160,12 +145,10 @@ fi
 # use eval with "$PARSED" to properly handle the quoting
 eval set -- "$PARSED"
 
-copy=false
 clean=false
 pack=false
 sshcopy=false
 tests=false
-verbose=false
 noqspi=false
 
 while true; do
@@ -174,14 +157,6 @@ while true; do
             showHelp
             shift
             ;;
-        -B|--bitstream)
-            BITSTREAM=$2
-            shift 2
-            ;;
-        -D|--dest)
-            DEST=$2
-            shift 2
-            ;;
         -C|--clean)
     	    clean=true
     	    shift
@@ -189,10 +164,6 @@ while true; do
         -u|--device)
             DEVICE=$2
             shift 2
-            ;;
-        -c|--copy)
-            copy=true
-            shift
             ;;
          -S|--ssh-copy)
             sshcopy=true
@@ -208,10 +179,6 @@ while true; do
             ;;
          -T|--test)
             tests=true
-            shift
-            ;;
-         -v|--verbose)
-            verbose=true
             shift
             ;;
          -H|--hdf)
@@ -238,37 +205,9 @@ while true; do
 done
 return
 
-if $verbose; then
-cat <<EOF 
-Current values
-================================================================================
-SRC="$SRC"
-SSH="$SSH"
-DEST="$DEST"
-PASSWORD="$PASSWORD"
-DEVICE="$DEVICE"
-BITSTREAM="$BITSTREAM"
-DEFAULT_IMAGE="$DEFAULT_IMAGE"
-MODULE_DIR="$MODULE_DIR"
-LIBRARY_DIR="$LIBRARY_DIR"
-SERVER_DIR="$SERVER_DIR"
-XADC_TEST_DIR="$XADC_TEST_DIR"
-MCP_DIR="$MCP_DIR"
-HDF="$HDF"
-================================================================================
-EOF
-    echo "Press a key to continue"
-    read -sn 1
-
-fi
-
 # Copy hdf
 if [[ ! -z "$HDF" ]]; then
 	extract_hdf "$HDF" || exit 1
-fi
-
-if $copy; then
-    do_copy || exit
 fi
 
 if $sshcopy; then

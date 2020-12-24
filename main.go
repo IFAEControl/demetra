@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/pborman/getopt/v2"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -15,28 +16,11 @@ func main() {
 	// resets the FPGA, so any possible change introduced by reading the header is ignored.
 	// If that is true, I don't know why we needed to convert it.
 
-	bitstream := getopt.StringLong("bitstream", 'B', "", "Bitstream location")
-	build := getopt.BoolLong("build", 'b', "", "Build image")
-	copy := getopt.BoolLong("copy", 'c', "Copy image files to directory")
-	dest_dir_arg := getopt.StringLong("dest", 'D', "/tmp/sd", "Destination directory to copy the output image")
-	docker := getopt.BoolLong("docker", 'd', "Use docker for executing the required action")
-	external := getopt.BoolLong("external", 'E', "Use external source tree")
-	no_clean := getopt.BoolLong("no-clean", 0, "Don't remove changes on layers")
-	// XXX: This should not be plain text password
-	password := getopt.StringLong("password", 'p', "root", "Password for the root user")
-	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
-	release := getopt.StringLong("release", 'R', "", "Override defined release")
-	shell := getopt.BoolLong("shell", 's', "Spawn a shell just before start compiling")
-
-	// create options go
-
-	getopt.Parse()
-
-	dest_dir := *dest_dir_arg
+	opt := parseOptions()
 
 	b := NewBash()
 
-	if *docker {
+	if opt.Docker {
 		var args []string
 		for _, v := range os.Args[1:] {
 			if v != "--docker" && v != "-d" {
@@ -50,41 +34,51 @@ func main() {
 		os.Exit(0)
 	}
 
-	cfg, err := parseConfig(*proj_def)
+	cfg, err := parseConfig(opt.ProjDef)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cfg.SetupDir = Expand(cfg.SetupDir)
 
-	if *release != "" {
-		cfg.Release = *release
+	if opt.Release != "" {
+		cfg.Release = opt.Release
 	}
 
-	yocto := Yocto{b, cfg, *external, *password, !*no_clean}
+	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean}
 	yocto.setupYocto()
 
 	// build
-	if *build {
-		yocto.BuildImage(*shell)
+	if opt.Build {
+		yocto.BuildImage(opt.Shell)
 	}
 
-	/*if dest_dir == "" {
+	if opt.HDF != "" {
 		// Prepare directory where firmware image will be hold temporarily
-		dest_dir, err = ioutil.TempDir("", "demetra")
+		dir, err := ioutil.TempDir("", "demetra")
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer os.RemoveAll(dest_dir)
-	}*/
+		defer os.RemoveAll(dir)
 
-	// TODO: Implement copy script in Go
-	if *bitstream != "" {
-		Copy(*bitstream, dest_dir+"/fpga.bit")
+		paths, err := Unzip(opt.HDF, dir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, p := range paths {
+			if filepath.Ext(p) == ".bit" {
+				opt.Bitstream = p
+				break
+			}
+		}
+		log.Println("Using bitstream: " + opt.Bitstream)
 	}
 
-	if *copy {
-		b.Run("../scripts/copy.sh", dest_dir, "build/tmp/deploy/images/", "", cfg.Machine, *bitstream, "false")
+	// TODO: Implement copy script in Go
+	if opt.Copy {
+		//Copy(*bitstream, dest_dir+"/fpga.bit")
+		b.Run("../scripts/copy.sh", opt.DestDir, "build/tmp/deploy/images/", "", cfg.Machine, opt.Bitstream, "false")
 	}
 }
 
