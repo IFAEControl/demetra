@@ -16,18 +16,23 @@ func main() {
 	// If that is true, I don't know why we needed to convert it.
 
 	bitstream := getopt.StringLong("bitstream", 'B', "", "Bitstream location")
-	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
 	build := getopt.BoolLong("build", 'b', "", "Build image")
-	release := getopt.StringLong("release", 'R', "", "Override defined release")
-	external := getopt.BoolLong("external", 'E', "Use external source tree")
+	copy := getopt.BoolLong("copy", 'c', "Copy image files to directory")
+	dest_dir_arg := getopt.StringLong("dest", 'D', "/tmp/sd", "Destination directory to copy the output image")
 	docker := getopt.BoolLong("docker", 'd', "Use docker for executing the required action")
+	external := getopt.BoolLong("external", 'E', "Use external source tree")
 	no_clean := getopt.BoolLong("no-clean", 0, "Don't remove changes on layers")
-	shell := getopt.BoolLong("shell", 's', "Spawn a shell just before start compiling")
-
 	// XXX: This should not be plain text password
 	password := getopt.StringLong("password", 'p', "root", "Password for the root user")
+	proj_def := getopt.StringLong("project", 'P', "", "Project definition file")
+	release := getopt.StringLong("release", 'R', "", "Override defined release")
+	shell := getopt.BoolLong("shell", 's', "Spawn a shell just before start compiling")
+
+	// create options go
 
 	getopt.Parse()
+
+	dest_dir := *dest_dir_arg
 
 	b := NewBash()
 
@@ -64,13 +69,23 @@ func main() {
 		yocto.BuildImage(*shell)
 	}
 
-	// Prepare directory where firmware image will be hold temporarily
-	dir, err := ioutil.TempDir("", "demetra")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	/*if dest_dir == "" {
+		// Prepare directory where firmware image will be hold temporarily
+		dest_dir, err = ioutil.TempDir("", "demetra")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer os.RemoveAll(dest_dir)
+	}*/
 
+	// TODO: Implement copy script in Go
+	if *bitstream != "" {
+		Copy(*bitstream, dest_dir+"/fpga.bit")
+	}
+
+	if *copy {
+		b.Run("../scripts/copy.sh", dest_dir, "build/tmp/deploy/images/", "", cfg.Machine, *bitstream, "false")
+	}
 }
 
 /*package main

@@ -6,16 +6,16 @@ DEVICE="$3"
 MACHINE="$4"
 BITSTREAM="$5"
 CLEAN="$6"
-MAC="$7"
 
 SRC="$SRC/$MACHINE"
 
 if [ ! -d "$DEST" ]; then
-	mkdir "$DEST"
+	echo "Creating directory $DEST"
+	mkdir "$DEST" || exit 1
 fi
 
 if [ ! -d "$SRC" ]; then
-	echo "ERROR: image directory could not be found."
+	echo "ERROR: image directory $SRC could not be found. PWD=$PWD"
 	exit 1
 fi
 
@@ -30,7 +30,7 @@ if $CLEAN; then
 	/bin/rm -f "$DEST"/*
 fi	
 
-scripts/common-copy.sh "$DEST" "$SRC" "$MACHINE" "$BITSTREAM" || exit
+../scripts/common-copy.sh "$DEST" "$SRC" "$MACHINE" "$BITSTREAM" || exit
 
 if [ "$DEVICE" != "" ]; then
    udisksctl unmount -b "$DEVICE"
