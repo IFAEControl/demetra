@@ -14,10 +14,13 @@ type options struct {
 	External  bool
 	HDF       string
 	NoClean   bool
+	NoQSPI    bool
 	Password  string
 	ProjDef   string
 	Release   string
 	Shell     bool
+	SshCopy   bool
+	SshIP     string
 }
 
 func parseOptions() options {
@@ -39,6 +42,9 @@ func parseOptions() options {
 	getopt.FlagLong(&opt.ProjDef, "project", 'P', "Project definition file")
 	getopt.FlagLong(&opt.Release, "release", 'R', "Override defined release")
 	getopt.FlagLong(&opt.Shell, "shell", 's', "Spawn a shell just before start compiling")
+	getopt.FlagLong(&opt.SshCopy, "ssh-copy", 'S', "Copy the image remotely (by default it will copy the content to the SD and QSPI)")
+	getopt.FlagLong(&opt.SshIP, "ssh-ip", 0, "Specify SSH IP where firmware will be copied")
+	getopt.FlagLong(&opt.NoQSPI, "no-qspi", 0, "Do not copy the new content to QSPI flash memory")
 
 	getopt.ParseV2()
 

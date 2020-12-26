@@ -20,7 +20,7 @@ if [ ! -d "$SRC" ]; then
 	exit 1
 fi
 
-scripts/common-copy.sh "$DEST" "$SRC" "$MACHINE" "$BITSTREAM" || exit
+../scripts/common-copy.sh "$DEST" "$SRC" "$MACHINE" "$BITSTREAM" || exit
 
 OLD_DIR="$PWD"
 cd "$DEST" || exit

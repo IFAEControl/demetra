@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"path/filepath"
 )
 
@@ -79,6 +80,10 @@ func main() {
 	if opt.Copy {
 		//Copy(*bitstream, dest_dir+"/fpga.bit")
 		b.Run("../scripts/copy.sh", opt.DestDir, "build/tmp/deploy/images/", "", cfg.Machine, opt.Bitstream, "false")
+	}
+
+	if opt.SshCopy {
+		b.Run("../scripts/ssh-copy.sh", "build/tmp/deploy/images/", cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, strconv.FormatBool(opt.NoQSPI))
 	}
 }
 

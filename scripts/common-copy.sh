@@ -38,7 +38,7 @@ if [ "$MACHINE" == "mercury-zx5" ]; then
 	cp resources/uEnv.txt "$DEST/uEnv.txt" || exit 1
 
 	# Check sizes
-	./scripts/check_image_files_size.py "$DEST" || exit
+	../scripts/check_image_files_size.py "$DEST" || exit
 fi
 
 
