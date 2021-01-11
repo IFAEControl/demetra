@@ -1,3 +1,8 @@
 setup_dir = "linda_yocto"
 release = "zeus"
 machine = "picozed-zynq7"
+
+# Extra layer
+[[repo]]
+uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
+layers = ["meta-xilinx-tools"]

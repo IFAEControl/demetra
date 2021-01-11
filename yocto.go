@@ -141,6 +141,9 @@ func (y Yocto) setupYocto() {
 		}
 	}
 
+	conf.set("HDF_BASE", "file://")
+	conf.set("HDF_PATH", "/home/droman/Develop/Work/IFAEControl/demetra/DMASystemTest_wrapper.hdf")
+
 	y.setupLayers(y.cfg.Repo, y.cfg.Release)
 }
 
