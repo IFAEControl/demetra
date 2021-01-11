@@ -1,5 +1,5 @@
 setup_dir = "linda_yocto"
-release = "zeus"
+release = "gatesgarth"
 machine = "picozed-zynq7"
 
 # Extra layer
