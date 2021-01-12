@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"path/filepath"
+	"strconv"
 )
 
 func main() {
@@ -20,6 +20,11 @@ func main() {
 	opt := parseOptions()
 
 	b := NewBash()
+
+	demetraDir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if opt.Docker {
 		var args []string
@@ -46,34 +51,38 @@ func main() {
 		cfg.Release = opt.Release
 	}
 
-	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean}
+	if cfg.Release == "gatesgarth" {
+		Copy(opt.HDF, "resources/latest.hdf")
+	} else {
+		if opt.HDF != "" {
+			// Prepare directory where firmware image will be hold temporarily
+			dir, err := ioutil.TempDir("", "demetra")
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer os.RemoveAll(dir)
+
+			paths, err := Unzip(opt.HDF, dir)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			for _, p := range paths {
+				if filepath.Ext(p) == ".bit" {
+					opt.Bitstream = p
+					break
+				}
+			}
+			log.Println("Using bitstream: " + opt.Bitstream)
+		}
+	}
+
+	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, demetraDir}
 	yocto.setupYocto()
 
 	// build
 	if opt.Build {
 		yocto.BuildImage(opt.Shell)
-	}
-
-	if opt.HDF != "" {
-		// Prepare directory where firmware image will be hold temporarily
-		dir, err := ioutil.TempDir("", "demetra")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer os.RemoveAll(dir)
-
-		paths, err := Unzip(opt.HDF, dir)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, p := range paths {
-			if filepath.Ext(p) == ".bit" {
-				opt.Bitstream = p
-				break
-			}
-		}
-		log.Println("Using bitstream: " + opt.Bitstream)
 	}
 
 	// TODO: Implement copy script in Go

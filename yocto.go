@@ -7,11 +7,12 @@ import (
 )
 
 type Yocto struct {
-	b        *Bash
-	cfg      tomlConfig
-	external bool
-	password string
-	clean    bool
+	b          *Bash
+	cfg        tomlConfig
+	external   bool
+	password   string
+	clean      bool
+	demetraDir string
 }
 
 func (y Yocto) setupSingleLayer(uri, release string, layers ...string) {
@@ -141,8 +142,9 @@ func (y Yocto) setupYocto() {
 		}
 	}
 
+	// This is only used in gatesgarth branch but it doesn't hurt
 	conf.set("HDF_BASE", "file://")
-	conf.set("HDF_PATH", "/home/droman/Develop/Work/IFAEControl/demetra/DMASystemTest_wrapper.hdf")
+	conf.set("HDF_PATH", y.demetraDir + "/resources/latest.hdf")
 
 	y.setupLayers(y.cfg.Repo, y.cfg.Release)
 }
