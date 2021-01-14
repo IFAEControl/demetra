@@ -52,7 +52,10 @@ func main() {
 	}
 
 	if cfg.Release == "gatesgarth" {
-		Copy(opt.HDF, "resources/latest.hdf")
+		err = Copy(opt.HDF, "resources/latest.hdf")
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		if opt.HDF != "" {
 			// Prepare directory where firmware image will be hold temporarily
