@@ -51,13 +51,13 @@ func main() {
 		cfg.Release = opt.Release
 	}
 
-	if cfg.Release == "gatesgarth" {
-		err = Copy(opt.HDF, "resources/latest.hdf")
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		if opt.HDF != "" {
+	if opt.HDF != "" {
+		if cfg.Release == "gatesgarth" {
+			err = Copy(opt.HDF, "resources/latest.hdf")
+			if err != nil {
+				panic(err)
+			}
+		} else {
 			// Prepare directory where firmware image will be hold temporarily
 			dir, err := ioutil.TempDir("", "demetra")
 			if err != nil {
