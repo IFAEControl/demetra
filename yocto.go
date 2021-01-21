@@ -131,7 +131,7 @@ func (y Yocto) setupYocto() {
 		conf.append("INHERIT += \"externalsrc\"")
 
 		for key, value := range y.cfg.Srcs {
-			k := "EXTERNALSRC_pn" + key
+			k := "EXTERNALSRC_pn-" + key
 			path := Expand(value.Path)
 			conf.set(k, path)
 
