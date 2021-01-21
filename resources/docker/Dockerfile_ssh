@@ -1,17 +1,18 @@
 FROM base-yocto
 
-RUN echo 'build ALL=(ALL:ALL) NOPASSWD:ALL' >> /etc/sudoers
+ARG user
+RUN echo "$user ALL=(ALL:ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 ARG uid
-RUN id build 2>/dev/null || useradd --uid $uid --create-home build
+RUN id $user 2>/dev/null || useradd --uid $uid --create-home $user
 
-ADD docker_ed25519 /home/build/.ssh/id_ed25519
+ADD docker_ed25519 /home/$user/.ssh/id_ed25519
 
-RUN mkdir -p /home/build/.ssh; echo "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null\n" > /home/build/.ssh/config
-RUN chown -R build:build /home/build/.ssh
-RUN chmod 700 -R /home/build/.ssh
+RUN mkdir -p /home/$user/.ssh; echo "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null\n" > /home/$user/.ssh/config
+RUN chown -R $user:$user /home/$user/.ssh
+RUN chmod 700 -R /home/$user/.ssh
 
-USER build
-WORKDIR /home/build/gfayocto
+USER $user
+WORKDIR /home/$user/yocto
 
 CMD "/bin/bash" 
