@@ -11,7 +11,7 @@ RUN apt-get install -y curl bc libelf-dev libpcre3-dev
 RUN git clone https://github.com/antmicro/zynq-mkbootimage; cd zynq-mkbootimage; make;  cp mkbootimage /usr/bin/
 
 # Xilinx workarounds
-# RUN apt-get install -y screen
+RUN apt-get install -y screen
 
 # Petalinux dependencies
 RUN apt-get install -y xterm autoconf zlib1g-dev libtinfo5 net-tools libncurses-dev libtool-bin
