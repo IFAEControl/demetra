@@ -45,7 +45,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cfg.SetupDir = Expand(cfg.SetupDir)
+	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if opt.Release != "" {
 		cfg.Release = opt.Release

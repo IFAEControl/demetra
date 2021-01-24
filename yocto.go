@@ -19,8 +19,23 @@ type Yocto struct {
 
 func (y Yocto) setupSingleLayer(doPull bool, uri, release string, layers ...string) {
 	y.setupRepo(doPull, uri, "", release)
+
+	old_dir, _ := os.Getwd()
+	err := os.Chdir(y.cfg.SetupDir + "/build")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for _, l := range layers {
-		y.b.Run("check_layer", l)
+		// XXX: When BBPATH is set show-layers work but add-layers complains
+		// it can not find bblayer.conf. This is just a hack until we
+		// are able to fix it
+		y.b.Run("../bitbake/bin/bitbake-layers", "add-layer", "../"+l)
+	}
+
+	err = os.Chdir(old_dir)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -158,6 +173,8 @@ func (y Yocto) setupYocto() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	y.b.Export("BBPATH", y.cfg.SetupDir+"/build")
 
 	y.b.Run("checkout_machine", y.cfg.Machine)
 	y.b.Run("set_password", y.password)

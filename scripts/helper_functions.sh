@@ -73,16 +73,6 @@ function checkout_machine() {
 	fi
 }
 
-function check_layer() {
-	TMP=$(mktemp)
-	head -n -1 build/conf/bblayers.conf > "$TMP"
-	if ! grep "$1" build/conf/bblayers.conf > /dev/null; then
-		echo "$(pwd)/$1 \\"  >> "$TMP"
-	fi
-	echo "\""  >> "$TMP"
-	mv "$TMP" build/conf/bblayers.conf
-}
-
 function build() {
 	source oe-init-build-env
 	bitbake core-image-minimal
