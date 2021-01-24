@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 type Yocto struct {
@@ -12,17 +13,18 @@ type Yocto struct {
 	external   bool
 	password   string
 	clean      bool
+	forcePull  bool
 	demetraDir string
 }
 
-func (y Yocto) setupSingleLayer(uri, release string, layers ...string) {
-	y.setupRepo(uri, "", release)
+func (y Yocto) setupSingleLayer(doPull bool, uri, release string, layers ...string) {
+	y.setupRepo(doPull, uri, "", release)
 	for _, l := range layers {
 		y.b.Run("check_layer", l)
 	}
 }
 
-func (y Yocto) setupLayers(layers []repo, release string) {
+func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
 	// first setup default layers
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
@@ -38,12 +40,12 @@ func (y Yocto) setupLayers(layers []repo, release string) {
 	}
 
 	for _, l := range default_layers {
-		y.setupSingleLayer(l.Uri, release, l.Layers...)
+		y.setupSingleLayer(doPull, l.Uri, release, l.Layers...)
 	}
 
 	// then setup extra layers
 	for _, l := range layers {
-		y.setupSingleLayer(l.Uri, release, l.Layers...)
+		y.setupSingleLayer(doPull, l.Uri, release, l.Layers...)
 	}
 }
 
@@ -81,7 +83,7 @@ func (y Yocto) cloneRepo(repo, directory string) string {
 	return directory
 }
 
-func (y Yocto) setupRepo(repo, directory, release string) {
+func (y Yocto) setupRepo(doPull bool, repo, directory, release string) {
 	if directory == "" {
 		directory = GetStem(repo)
 	}
@@ -101,7 +103,10 @@ func (y Yocto) setupRepo(repo, directory, release string) {
 		y.b.Run("git", "clean", "-fd")
 	}
 
-	y.b.Run("git", "pull")
+	if doPull {
+		y.b.Run("git", "pull")
+	}
+
 	y.b.Run("checkout_repository", release)
 
 	err = os.Chdir(old_dir)
@@ -110,10 +115,43 @@ func (y Yocto) setupRepo(repo, directory, release string) {
 	}
 }
 
+func (y Yocto) needsPull() (ret bool) {
+	ret = false
+	pullFile := y.demetraDir + "/demetra-pulls"
+
+	if y.forcePull || !Exists(pullFile) {
+		ret = true
+	} else {
+		info, err := os.Stat(pullFile)
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		if time.Now().Day() != info.ModTime().Day() {
+			ret = true
+
+			now := time.Now().Local()
+			err := os.Chtimes(pullFile, now, now)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	err := CreateFile(pullFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ret
+}
+
 func (y Yocto) setupYocto() {
 	y.b.Source("scripts/helper_functions.sh")
 
-	y.setupRepo("git://git.yoctoproject.org/poky", y.cfg.SetupDir, y.cfg.Release)
+	doPull := y.needsPull()
+
+	y.setupRepo(doPull, "git://git.yoctoproject.org/poky", y.cfg.SetupDir, y.cfg.Release)
 	y.rebuildLocalCfg(y.cfg.SetupDir)
 
 	err := os.Chdir(y.cfg.SetupDir)
@@ -144,9 +182,9 @@ func (y Yocto) setupYocto() {
 
 	// This is only used in gatesgarth branch but it doesn't hurt
 	conf.set("HDF_BASE", "file://")
-	conf.set("HDF_PATH", y.demetraDir + "/resources/latest.hdf")
+	conf.set("HDF_PATH", y.demetraDir+"/resources/latest.hdf")
 
-	y.setupLayers(y.cfg.Repo, y.cfg.Release)
+	y.setupLayers(doPull, y.cfg.Repo, y.cfg.Release)
 }
 
 func (y Yocto) BuildImage(shell bool) {

@@ -80,7 +80,7 @@ func main() {
 		}
 	}
 
-	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, demetraDir}
+	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
 	yocto.setupYocto()
 
 	// build

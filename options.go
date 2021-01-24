@@ -12,6 +12,7 @@ type options struct {
 	DestDir   string
 	Docker    bool
 	External  bool
+	ForcePull bool
 	HDF       string
 	NoClean   bool
 	NoQSPI    bool
@@ -45,6 +46,7 @@ func parseOptions() options {
 	getopt.FlagLong(&opt.SshCopy, "ssh-copy", 'S', "Copy the image remotely (by default it will copy the content to the SD and QSPI)")
 	getopt.FlagLong(&opt.SshIP, "ssh-ip", 0, "Specify SSH IP where firmware will be copied")
 	getopt.FlagLong(&opt.NoQSPI, "no-qspi", 0, "Do not copy the new content to QSPI flash memory")
+	getopt.FlagLong(&opt.ForcePull, "force-pull", 0, "Force update of yocto and meta-layers")
 
 	getopt.ParseV2()
 
