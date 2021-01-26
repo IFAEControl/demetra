@@ -21,14 +21,6 @@ function is_current_branch() {
     fi
 }
 
-function apply_patch() {
-	(
-		OLD="$(pwd)"
-		cd "$1" || exit 1
-		git apply "${OLD}/../resources/$2" || exit 1
-	)
-}
-
 function set_password() {
 	if ! grep 'INHERIT += "extrausers"' build/conf/local.conf > /dev/null; then
   		echo 'INHERIT += "extrausers"' >> build/conf/local.conf
@@ -45,12 +37,6 @@ function date_last_commit() {
 	cd "$1" || exit
 	date -d"$(git log -1 --format=%cD)" +%Y%m%d%H%M
 	cd "$YOCTO_WD" || exit
-}
-
-function install_package() {
-	if ! grep "$1" build/conf/local.conf > /dev/null; then
-		echo "IMAGE_INSTALL_append = \" $1\"" >> build/conf/local.conf
-	fi
 }
 
 function checkout_repository() {
