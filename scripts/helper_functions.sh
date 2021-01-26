@@ -75,7 +75,7 @@ function checkout_machine() {
 
 function build() {
 	source oe-init-build-env
-	bitbake core-image-minimal
+	bitbake ifae-image
 }
 
 function dockerized_run() {
