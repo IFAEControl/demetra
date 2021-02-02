@@ -17,9 +17,7 @@ type Yocto struct {
 	demetraDir string
 }
 
-func (y Yocto) setupSingleLayer(doPull bool, uri, release string, layers ...string) {
-	y.setupRepo(doPull, uri, "", release)
-
+func (y Yocto) addLayers(layers ...string) {
 	old_dir, _ := os.Getwd()
 	err := os.Chdir(y.cfg.SetupDir + "/build")
 	if err != nil {
@@ -40,7 +38,6 @@ func (y Yocto) setupSingleLayer(doPull bool, uri, release string, layers ...stri
 }
 
 func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
-	// first setup default layers
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
 		{"git@gitlab.pic.es:ifaecontrol/meta-ifae.git", []string{"meta-ifae"}},
@@ -54,13 +51,28 @@ func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
 		},
 	}
 
-	for _, l := range default_layers {
-		y.setupSingleLayer(doPull, l.Uri, release, l.Layers...)
+	// Check that the repo exist and the branch is correct
+	{
+		for _, l := range default_layers {
+			y.setupRepo(doPull, l.Uri, "", release)
+		}
+
+		// setup aditional layers
+		for _, l := range layers {
+			y.setupRepo(doPull, l.Uri, "", release)
+		}
 	}
 
-	// then setup extra layers
-	for _, l := range layers {
-		y.setupSingleLayer(doPull, l.Uri, release, l.Layers...)
+	// add layers to bblayers.conf
+	{
+		for _, l := range default_layers {
+			y.addLayers(l.Layers...)
+		}
+
+		// setup aditional layers
+		for _, l := range layers {
+			y.addLayers(l.Layers...)
+		}
 	}
 }
 
@@ -200,6 +212,9 @@ func (y Yocto) setupYocto() {
 	// This is only used in gatesgarth branch but it doesn't hurt
 	conf.set("HDF_BASE", "file://")
 	conf.set("HDF_PATH", y.demetraDir+"/resources/latest.hdf")
+
+	conf.set("IMAGE_INSTALL_append", " linda-module")
+	conf.append("KERNEL_MODULE_AUTOLOAD += \"ifae_linda\"")
 
 	y.setupLayers(doPull, y.cfg.Repo, y.cfg.Release)
 }
