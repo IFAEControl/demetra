@@ -214,6 +214,9 @@ func (y Yocto) setupYocto() {
 	conf.set("HDF_BASE", "file://")
 	conf.set("HDF_PATH", y.demetraDir+"/resources/latest.hdf")
 
+	// By default add ssh server
+	conf.set("IMAGE_FEATURES_append", " ssh-server-openssh")
+
 	packages := strings.Join(y.cfg.Packages, " ")
 
 	conf.set("IMAGE_INSTALL_append", packages)
