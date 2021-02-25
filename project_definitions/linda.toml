@@ -9,3 +9,15 @@ packages = ["linda-module"]
 #[[repo]]
 #uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
 #layers = ["meta-xilinx-tools"]
+
+# Needed for external flag
+[srcs]
+	[srcs.linda-module]
+	module = true
+	path = "~/Develop/Work/linda/linda_module"
+	[srcs.linda-library]
+	module = false
+	path = "~/Develop/Work/linda/linda_library"
+	[srcs.linda-server]
+	module = false
+	path = "~/Develop/Work/linda/linda_server"

@@ -61,7 +61,7 @@ function checkout_machine() {
 
 function build() {
 	source oe-init-build-env
-	bitbake ifae-image
+	bitbake core-image-minimal
 }
 
 function dockerized_run() {
@@ -78,6 +78,7 @@ function dockerized_run() {
    # TODO mount external source dirs
     docker run -v "$(pwd)":"$(pwd)" \
     		-v /home/droman/Develop/Work/linda/linda_module:/home/droman/Develop/Work/linda/linda_module \
+    		-v /home/droman/Develop/Work/linda/linda_server:/home/droman/Develop/Work/linda/linda_server \
     		-v /home/droman/Develop/Work/linda/linda_library:/home/droman/Develop/Work/linda/linda_library \
 	       -w "$(pwd)" \
 	       --cap-add=NET_ADMIN --network=host --device /dev/net/tun:/dev/net/tun \
