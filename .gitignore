@@ -2,3 +2,4 @@ demetra
 docker_ed25519
 demetra-pulls
 *_yocto
+*.idea

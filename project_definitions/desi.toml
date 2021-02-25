@@ -1,6 +1,7 @@
 setup_dir = "desi_yocto"
 release = "zeus"
 machine = "mercury-zx5"
+packages = ["tar", "chrony", "ethtool", "net-tools", "tcpdump", "avahi-daemon", "gfa-server", "gfa-config", "mcp11aa02e48", "mtd-utils", "mtd-utils-jffs2", "iputils"]
 
 # Extra layers
 [[repo]]

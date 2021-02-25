@@ -2,7 +2,10 @@ setup_dir = "linda_yocto"
 release = "gatesgarth"
 machine = "picozed-zynq7"
 
+# Packages to be installed
+packages = ["linda-module"]
+
 # Extra layer
-[[repo]]
-uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
-layers = ["meta-xilinx-tools"]
+#[[repo]]
+#uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
+#layers = ["meta-xilinx-tools"]

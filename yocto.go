@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"log"
 	"os"
 	"time"
@@ -213,7 +214,9 @@ func (y Yocto) setupYocto() {
 	conf.set("HDF_BASE", "file://")
 	conf.set("HDF_PATH", y.demetraDir+"/resources/latest.hdf")
 
-	conf.set("IMAGE_INSTALL_append", " linda-module")
+	packages := strings.Join(y.cfg.Packages, " ")
+
+	conf.set("IMAGE_INSTALL_append", packages)
 	conf.append("KERNEL_MODULE_AUTOLOAD += \"ifae_linda\"")
 
 	y.setupLayers(doPull, y.cfg.Repo, y.cfg.Release)

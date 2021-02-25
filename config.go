@@ -20,6 +20,7 @@ type tomlConfig struct {
 	SetupDir string `toml:"setup_dir"`
 	Release  string
 	Machine  string
+	Packages []string
 	Repo     []repo
 	Srcs     map[string]src
 }
