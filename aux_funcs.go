@@ -67,6 +67,15 @@ func CreateFile(name string) error {
 	return file.Close()
 }
 
+func CreateDir(path string) error {
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
+}
+
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
 func Unzip(src string, dest string) ([]string, error) {

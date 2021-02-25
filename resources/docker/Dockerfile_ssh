@@ -15,4 +15,4 @@ RUN chmod 700 -R /home/$user/.ssh
 USER $user
 WORKDIR /home/$user/yocto
 
-CMD "/bin/bash" 
+CMD "/bin/bash"

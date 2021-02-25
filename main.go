@@ -6,7 +6,115 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"bufio"
+	"fmt"
+
+	"context"
+	"io"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/client"
+	//"github.com/docker/docker/pkg/stdcopy"
 )
+
+func dockerizedRun(args []string) {
+	ctx := context.Background()
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		panic(err)
+	}
+
+	cwd, _ := os.Getwd()
+
+	cmd := append([]string{"./demetra"}, args...)
+
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image:        "yocto-build",
+		Cmd:          cmd,
+		AttachStderr: true,
+		AttachStdin:  true,
+		AttachStdout: true,
+		Tty:          true,
+		OpenStdin:    true,
+		WorkingDir:   cwd,
+		StdinOnce:    true,
+	}, &container.HostConfig{
+		AutoRemove: true,
+		CapAdd:     []string{"NET_ADMIN"},
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: cwd,
+				Target: cwd,
+			},
+		},
+	}, nil, nil, "")
+	if err != nil {
+		panic(err)
+	}
+
+	waiter, err := cli.ContainerAttach(ctx, resp.ID, types.ContainerAttachOptions{
+		Stderr: true,
+		Stdout: true,
+		Stdin:  true,
+		Stream: true,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+	defer waiter.Close()
+
+	inout := make(chan []byte)
+
+	go io.Copy(os.Stdout, waiter.Reader)
+	go io.Copy(os.Stderr, waiter.Reader)
+
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			inout <- []byte(scanner.Text())
+		}
+	}()
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		panic(err)
+	}
+
+	// Write to docker container
+	go func(w io.WriteCloser) {
+		for {
+			data, ok := <-inout
+			//log.Println("Received to send to docker", string(data))
+			if !ok {
+				fmt.Println("!ok")
+				w.Close()
+				return
+			}
+
+			w.Write(append(data, '\n'))
+		}
+	}(waiter.Conn)
+
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			panic(err)
+		}
+	case <-statusCh:
+	}
+
+	/*out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: false})
+	if err != nil {
+		panic(err)
+	}
+
+	stdcopy.StdCopy(os.Stdout, os.Stderr, out)*/
+}
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -36,7 +144,8 @@ func main() {
 
 		// Run this program inside container and exit
 		b.Source("scripts/helper_functions.sh")
-		b.Run("dockerized_run", args...)
+		//b.Run("dockerized_run", args...)
+		dockerizedRun(args)
 		os.Exit(0)
 	}
 

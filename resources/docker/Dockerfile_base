@@ -4,7 +4,7 @@ RUN apt-get update
 RUN apt-get -y dist-upgrade
 
 # Yocto and meta-xilinx dependencies
-RUN apt-get install -y git python python3 locales diffstat texinfo bzip2 gawk chrpath wget cpio make gcc g++ lsb-release procps
+RUN apt-get install -y git python python3 locales diffstat texinfo bzip2 gawk chrpath wget cpio make gcc g++ lsb-release procps libc-dev-bin
 RUN apt-get install -y sshpass
 # Enclustra dependencies
 RUN apt-get install -y curl bc libelf-dev libpcre3-dev

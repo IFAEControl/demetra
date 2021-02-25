@@ -194,6 +194,16 @@ func (y Yocto) setupYocto() {
 	conf := NewLocalConf()
 	defer conf.Close()
 
+	xdg_cache_dir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cache_dir := xdg_cache_dir + "/demetra"
+	CreateDir(cache_dir)
+
+	conf.append("SSTATE_DIR ?= \"" + cache_dir + "/sstate-cache\"")
+
 	if y.external {
 		conf.append("INHERIT += \"externalsrc\"")
 

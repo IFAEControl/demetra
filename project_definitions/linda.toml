@@ -1,8 +1,22 @@
 setup_dir = "linda_yocto"
 release = "gatesgarth"
-machine = "picozed-zynq7"
+machine = "microzed-zynq7"
 
 # Extra layer
-[[repo]]
-uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
-layers = ["meta-xilinx-tools"]
+#[[repo]]
+#uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
+#layers = ["meta-xilinx-tools"]
+
+# Needed for external flag
+[srcs]
+
+        # After the dot goes the yocto package name for which
+        # we want to use externalsrc
+        [srcs.linda-module]
+        # If this source is of a module set this to true
+        module = true
+        path = "~/Develop/Work/ifae-control/yocto_dma_example_software"
+
+	[srcs.linux-xlnx]
+	module = false
+	path = "~/Develop/Projects/linux-xlnx"
