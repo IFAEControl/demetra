@@ -26,6 +26,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cfg, err := parseConfig(opt.ProjDef)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if opt.Docker {
 		var args []string
 		for _, v := range os.Args[1:] {
@@ -34,15 +39,17 @@ func main() {
 			}
 		}
 
+		var volumes string
+		for _, v := range cfg.Srcs {
+			p := Expand(v.Path)
+			volumes += " -v " + p + ":" + p
+		}
+
 		// Run this program inside container and exit
 		b.Source("scripts/helper_functions.sh")
+		b.Export("DOCKER_MOUNT_ARGS", volumes)
 		b.Run("dockerized_run", args...)
 		os.Exit(0)
-	}
-
-	cfg, err := parseConfig(opt.ProjDef)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
