@@ -219,6 +219,9 @@ func (y Yocto) setupYocto() {
 	// By default add ssh server
 	conf.set("IMAGE_FEATURES_append", " ssh-server-openssh")
 
+	// Disable stuff we don't use
+	conf.set("DISTRO_FEATURES_remove", "3g bluetooth nfc x11 wayland alsa nfs wifi opengl ext2 smbfs ptest gtk gtk3 multiarch wayland vulkan usbhost")
+
 	packages := strings.Join(y.cfg.Packages, " ")
 
 	conf.set("IMAGE_INSTALL_append", packages)
