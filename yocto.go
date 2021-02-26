@@ -195,6 +195,8 @@ func (y Yocto) setupYocto() {
 	conf := NewLocalConf()
 	defer conf.Close()
 
+	conf.append("SSTATE_DIR ?= \"" + GetSstateCacheDir() + "\"")
+
 	if y.external {
 		conf.append("INHERIT += \"externalsrc\"")
 

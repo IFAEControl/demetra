@@ -45,6 +45,9 @@ func main() {
 			volumes += " -v " + p + ":" + p
 		}
 
+		d := GetSstateCacheDir()
+		volumes += " -v " + d + ":" + d
+
 		// Run this program inside container and exit
 		b.Source("scripts/helper_functions.sh")
 		b.Export("DOCKER_MOUNT_ARGS", volumes)
