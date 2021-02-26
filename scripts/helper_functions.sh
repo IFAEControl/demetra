@@ -70,11 +70,6 @@ function dockerized_run() {
    CONTAINER_NAME="yocto-$(mktemp -u XXXXX)"
     docker build -f resources/docker/Dockerfile_ssh --build-arg user="$(whoami)" --build-arg uid="$(id -ru)" -t yocto-build . || exit 1
 
-    #DOCKER_MOUNT_ARGS=""
-    #for i in "${PROJECT_DIRS[@]}"; do
-    #   DOCKER_MOUNT_ARGS+=" -v $i:$i"
-   	#done
-
     docker run -v "$(pwd)":"$(pwd)" \
     		$DOCKER_MOUNT_ARGS \
 	       -w "$(pwd)" \

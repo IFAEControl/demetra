@@ -195,10 +195,10 @@ func (y Yocto) setupYocto() {
 	conf := NewLocalConf()
 	defer conf.Close()
 
-	conf.append("SSTATE_DIR ?= \"" + GetSstateCacheDir() + "\"")
+	conf.setDefault("SSTATE_DIR", GetSstateCacheDir())
 
 	if y.external {
-		conf.append("INHERIT += \"externalsrc\"")
+		conf.append("INHERIT", "externalsrc")
 
 		for key, value := range y.cfg.Srcs {
 			k := "EXTERNALSRC_pn-" + key
@@ -217,15 +217,15 @@ func (y Yocto) setupYocto() {
 	conf.set("HDF_PATH", y.demetraDir+"/resources/latest.hdf")
 
 	// By default add ssh server
-	conf.set("IMAGE_FEATURES_append", " ssh-server-openssh")
+	conf.append("IMAGE_FEATURES", "ssh-server-openssh")
 
 	// Disable stuff we don't use
 	conf.set("DISTRO_FEATURES_remove", "3g bluetooth nfc x11 wayland alsa nfs wifi opengl ext2 smbfs ptest gtk gtk3 multiarch wayland vulkan usbhost")
 
 	packages := strings.Join(y.cfg.Packages, " ")
 
-	conf.set("IMAGE_INSTALL_append", packages)
-	conf.append("KERNEL_MODULE_AUTOLOAD += \"ifae_linda\"")
+	conf.append("IMAGE_INSTALL", packages)
+	conf.append("KERNEL_MODULE_AUTOLOAD", "ifae_linda")
 
 	y.setupLayers(doPull, y.cfg.Repo, y.cfg.Release)
 }

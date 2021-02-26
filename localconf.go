@@ -24,7 +24,8 @@ func (c LocalConf) Close() {
 	c.file.Close()
 }
 
-func (c LocalConf) append(line string) {
+func (c LocalConf) add(line string) {
+	// If value already set return without doing anytying
 	if c.contains(line) {
 		return
 	}
@@ -50,15 +51,17 @@ func (c LocalConf) contains(line string) bool {
 	return false
 }
 
+func (c LocalConf) append(key, val string) {
+	line := key + "_append = \" " + val + "\""
+	c.add(line)
+}
+
 func (c LocalConf) set(key, val string) {
 	line := key + " = \"" + val + "\""
+	c.add(line)
+}
 
-	// If value already set return without doing anytying
-	if c.contains(line) {
-		return
-	}
-
-	if _, err := c.file.WriteString(line + "\n"); err != nil {
-		log.Fatal(err)
-	}
+func (c LocalConf) setDefault(key, val string) {
+	line := key + " ?= \"" + val + "\""
+	c.add(line)
 }
