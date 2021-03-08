@@ -52,7 +52,7 @@ func main() {
 		b.Source("scripts/helper_functions.sh")
 		b.Export("DOCKER_MOUNT_ARGS", volumes)
 		b.Run("dockerized_run", args...)
-		os.Exit(0)
+		//os.Exit(0)
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
@@ -93,12 +93,20 @@ func main() {
 		}
 	}
 
-	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
-	yocto.setupYocto()
+	if !opt.Docker {
+		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
+		yocto.setupYocto()
 
-	// build
-	if opt.Build {
-		yocto.BuildImage(opt.Shell)
+		// build
+		if opt.Build {
+			yocto.BuildImage(opt.Shell)
+		}
+	}
+
+	// Ensure we are on the correct location
+	err := os.Chdir(cfg.SetupDir)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// TODO: Implement copy script in Go
