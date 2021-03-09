@@ -104,7 +104,7 @@ func main() {
 	}
 
 	// Ensure we are on the correct location
-	err := os.Chdir(cfg.SetupDir)
+	err = os.Chdir(cfg.SetupDir)
 	if err != nil {
 		log.Fatal(err)
 	}
