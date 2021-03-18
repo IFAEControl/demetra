@@ -3,7 +3,7 @@ release = "gatesgarth"
 machine = "picozed-zynq7"
 
 # Packages to be installed
-packages = ["linda-module"]
+packages = ["linda-server"]
 
 # Extra layer
 #[[repo]]
