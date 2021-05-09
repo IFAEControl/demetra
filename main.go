@@ -111,8 +111,7 @@ func main() {
 
 	// TODO: Implement copy script in Go
 	if opt.Copy {
-		//Copy(*bitstream, dest_dir+"/fpga.bit")
-		b.Run("../scripts/copy.sh", opt.DestDir, "build/tmp/deploy/images/", "", cfg.Machine, opt.Bitstream, "false")
+		CopyImage(b, opt.DestDir, "build/tmp/deploy/images/", "", cfg.Machine, opt.Bitstream, false)
 	}
 
 	if opt.SshCopy {

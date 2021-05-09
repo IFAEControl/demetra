@@ -67,13 +67,11 @@ func CreateFile(name string) error {
 	return file.Close()
 }
 
-func CreateDir(path string) error {
+func CreateDir(path string) {
 	err := os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return nil
 }
 
 func GetSstateCacheDir() string {
