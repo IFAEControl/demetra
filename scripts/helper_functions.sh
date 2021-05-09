@@ -76,4 +76,6 @@ function dockerized_run() {
 	       --cap-add=NET_ADMIN --network=host --device /dev/net/tun:/dev/net/tun \
            -it --rm --name $CONTAINER_NAME yocto-build \
            ./demetra $@ || exit 1
+
+    exit 0
 }
