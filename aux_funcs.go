@@ -143,3 +143,21 @@ func Unzip(src string, dest string) ([]string, error) {
 	}
 	return filenames, nil
 }
+
+func RemoveContents(dir string) {
+	d, err := os.Open(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
