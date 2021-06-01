@@ -5,8 +5,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 )
+
+// TODO: log.Fatal breaks defer so resources can not be handled correctly
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -52,7 +53,7 @@ func main() {
 		b.Source("scripts/helper_functions.sh")
 		b.Export("DOCKER_MOUNT_ARGS", volumes)
 		b.Run("dockerized_run", args...)
-		//os.Exit(0)
+		os.Exit(0)
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
@@ -115,7 +116,7 @@ func main() {
 	}
 
 	if opt.SshCopy {
-		b.Run("../scripts/ssh-copy.sh", "build/tmp/deploy/images/", cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, strconv.FormatBool(opt.NoQSPI))
+		CopyRemoteImage(b, "build/tmp/deploy/images/", cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, opt.NoQSPI)
 	}
 }
 

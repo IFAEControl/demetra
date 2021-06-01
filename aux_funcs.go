@@ -4,13 +4,29 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
 )
+
+func CommandInPath(cmd string) bool {
+	_, err := exec.LookPath(cmd)
+	return err == nil
+}
+
+func MakeTmpDir() string {
+	dest, err := ioutil.TempDir(os.TempDir(), "demetra")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return dest
+}
 
 func Expand(path string) string {
 	usr, err := user.Current()
