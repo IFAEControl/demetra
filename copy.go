@@ -59,24 +59,20 @@ func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip s
 
 	// TOOD: Update file names according to the board type
 	ssh.Run("mount /dev/mmcblk0p1 /mnt")
+	defer ssh.Run("umount /mnt")
+
 	ssh.CopyFile(dest+"/boot.bin", "/mnt/boot.bin")
 	ssh.CopyFile(dest+"/uramdisk", "/mnt/uramdisk")
 	ssh.CopyFile(dest+"/uImage", "/mnt/uImage")
 	ssh.CopyFile(dest+"/fpga.bin", "/mnt/fpga.bin")
 	ssh.CopyFile(dest+"/devicetree.dtb", "/mnt/devicetree.dtb")
 	ssh.CopyFile(dest+"/uEnv.txt", "/mnt/uEnv.txt")
-	ssh.Run("umount /mnt")
 
 	if !no_qspi {
-		ssh.CopyFile(dest+"/boot.bin", "/tmp/boot.bin")
-		ssh.CopyFile(dest+"/uImage", "/tmp/uImage")
-		ssh.CopyFile(dest+"/fpga.bin", "/tmp/fpga.bin")
-		ssh.CopyFile(dest+"/devicetree.dtb", "/tmp/devicetree.dtb")
-		ssh.CopyFile(dest+"/uEnv.txt", "/tmp/uEnv.txt")
-		ssh.Run("flashcp -v /tmp/boot.bin /dev/mtd0")
-		ssh.Run("flashcp -v /tmp/uImage /dev/mtd1")
-		ssh.Run("flashcp -v /tmp/devicetree.dtb /dev/mtd2")
-		ssh.Run("flashcp -v /tmp/uramdisk /dev/mtd5")
+		ssh.Run("flashcp -v /mnt/boot.bin /dev/mtd0")
+		ssh.Run("flashcp -v /mnt/uImage /dev/mtd1")
+		ssh.Run("flashcp -v /mnt/devicetree.dtb /dev/mtd2")
+		ssh.Run("flashcp -v /mnt/uramdisk /dev/mtd5")
 	}
 
 	ssh.Run("killall gfaserverd gfaserver &> /dev/null")
