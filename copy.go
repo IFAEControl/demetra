@@ -45,41 +45,37 @@ func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip s
 
 	b.Run("../scripts/common-copy.sh", dest, src, machine, bitstream)
 
-	/*
-
-
-	   OLD_DIR="$PWD"
-	   cd "$DEST" || exit
-	   tar -cSf "$DEST/yocto.tar" boot.bin uramdisk devicetree.dtb uImage fpga.bin uEnv.txt
-	   cd "$OLD_DIR" || exit
-
-	*/
-
 	ssh := NewSshSession(ssh_ip, password)
 	defer ssh.Close()
 
+	// TODO use tar or something to transmit all files and after all files
+	// have been transmited extract them. This way we avoid a condition
+	// where one file is transmitted correctly and then, because of a network error
+	// a second file can not be transmitted, which may cause the system to not be able
+	// to boot if the system is restarted
+
+	// TOOD: Update file names according to the board type
 	ssh.Run("mount /dev/mmcblk0p1 /mnt")
-	ssh.CopyFile(dest+"/boot.bin", "/tmp/boot.bin")
-	ssh.CopyFile(dest+"/uImage", "/tmp/uImage")
+	ssh.CopyFile(dest+"/boot.bin", "/mnt/boot.bin")
+	ssh.CopyFile(dest+"/uramdisk", "/mnt/uramdisk")
+	ssh.CopyFile(dest+"/uImage", "/mnt/uImage")
+	ssh.CopyFile(dest+"/fpga.bin", "/mnt/fpga.bin")
+	ssh.CopyFile(dest+"/devicetree.dtb", "/mnt/devicetree.dtb")
+	ssh.CopyFile(dest+"/uEnv.txt", "/mnt/uEnv.txt")
 	ssh.Run("umount /mnt")
 
-	//bin/rm -f /mnt/* || exit
+	if !no_qspi {
+		ssh.CopyFile(dest+"/boot.bin", "/tmp/boot.bin")
+		ssh.CopyFile(dest+"/uImage", "/tmp/uImage")
+		ssh.CopyFile(dest+"/fpga.bin", "/tmp/fpga.bin")
+		ssh.CopyFile(dest+"/devicetree.dtb", "/tmp/devicetree.dtb")
+		ssh.CopyFile(dest+"/uEnv.txt", "/tmp/uEnv.txt")
+		ssh.Run("flashcp -v /tmp/boot.bin /dev/mtd0")
+		ssh.Run("flashcp -v /tmp/uImage /dev/mtd1")
+		ssh.Run("flashcp -v /tmp/devicetree.dtb /dev/mtd2")
+		ssh.Run("flashcp -v /tmp/uramdisk /dev/mtd5")
+	}
 
-	/*
-
-	   sshpass -p"$PASSWORD" scp -r "$DEST/yocto.tar" scripts/remote_update/ root@"$SSH":/tmp/
-	   if ! $NO_QSPI; then
-	      echo "sh /tmp/remote_update/mmc_copy.sh || exit 1" | sshpass -p"$PASSWORD" ssh -t root@"$SSH"
-	   else
-	      echo "sh /tmp/remote_update/mmc_copy.sh || exit 1" | sshpass -p"$PASSWORD" ssh -t root@"$SSH" || exit
-	   fi
-	   if ! $NO_QSPI; then
-	       echo "sh /tmp/remote_update/qspi_copy.sh || exit 1" | sshpass -p"$PASSWORD" ssh -t root@"$SSH" || exit
-	   fi
-	   echo "sh /tmp/remote_update/reboot.sh || exit 1" | sshpass -p"$PASSWORD" ssh -t root@"$SSH" || exit
-
-
-	   rm -r "$DEST"
-	*/
-
+	ssh.Run("killall gfaserverd gfaserver &> /dev/null")
+	ssh.Run("reboot")
 }
