@@ -102,6 +102,18 @@ func GetSstateCacheDir() string {
 	return cache_dir
 }
 
+func GetDlDir() string {
+	xdg_cache_dir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dl_dir := xdg_cache_dir + "/demetra/downloads"
+	CreateDir(dl_dir)
+
+	return dl_dir
+}
+
 // Unzip will decompress a zip archive, moving all files and folders
 // within the zip file (parameter 1) to an output directory (parameter 2).
 func Unzip(src string, dest string) ([]string, error) {

@@ -48,6 +48,8 @@ func main() {
 
 		d := GetSstateCacheDir()
 		volumes += " -v " + d + ":" + d
+		dl := GetDlDir()
+		volumes += " -v " + dl + ":" + dl
 
 		// Run this program inside container and exit
 		b.Source("scripts/helper_functions.sh")

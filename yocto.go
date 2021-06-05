@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -196,6 +196,7 @@ func (y Yocto) setupYocto() {
 	defer conf.Close()
 
 	conf.setDefault("SSTATE_DIR", GetSstateCacheDir())
+	conf.setDefault("DL_DIR", GetDlDir())
 
 	if y.external {
 		conf.append("INHERIT", "externalsrc")
