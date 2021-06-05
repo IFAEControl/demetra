@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"strings"
 )
@@ -13,9 +12,7 @@ type LocalConf struct {
 
 func NewLocalConf() *LocalConf {
 	f, err := os.OpenFile("build/conf/local.conf", os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	return &LocalConf{f}
 }
@@ -31,7 +28,7 @@ func (c LocalConf) add(line string) {
 	}
 
 	if _, err := c.file.WriteString(line + "\n"); err != nil {
-		log.Fatal(err)
+		LogAndExit(err)
 	}
 }
 
@@ -45,7 +42,7 @@ func (c LocalConf) contains(line string) bool {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		LogAndExit(err)
 	}
 
 	return false

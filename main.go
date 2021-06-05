@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 )
 
-// TODO: log.Fatal breaks defer so resources can not be handled correctly
-
 func main() {
+	defer os.Exit(0)
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// Regarding the bit vs bin files (we currently convert from bit format to bin)
@@ -23,14 +23,10 @@ func main() {
 	b := NewBash()
 
 	demetraDir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	cfg, err := parseConfig(opt.ProjDef)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	if opt.Docker {
 		var args []string
@@ -59,9 +55,7 @@ func main() {
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	if opt.Release != "" {
 		cfg.Release = opt.Release
@@ -70,21 +64,15 @@ func main() {
 	if opt.HDF != "" {
 		if cfg.Release == "gatesgarth" {
 			err = Copy(opt.HDF, "resources/latest.hdf")
-			if err != nil {
-				panic(err)
-			}
+			LogAndExit(err)
 		} else {
 			// Prepare directory where firmware image will be hold temporarily
 			dir, err := ioutil.TempDir("", "demetra")
-			if err != nil {
-				log.Fatal(err)
-			}
+			LogAndExit(err)
 			defer os.RemoveAll(dir)
 
 			paths, err := Unzip(opt.HDF, dir)
-			if err != nil {
-				log.Fatal(err)
-			}
+			LogAndExit(err)
 
 			for _, p := range paths {
 				if filepath.Ext(p) == ".bit" {
@@ -108,9 +96,7 @@ func main() {
 
 	// Ensure we are on the correct location
 	err = os.Chdir(cfg.SetupDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	// TODO: Implement copy script in Go
 	if opt.Copy {

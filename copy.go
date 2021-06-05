@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 )
 
 func CopyImage(b *Bash, dest_dir, src, device, machine, bitstream string, clean bool) {
@@ -14,7 +15,8 @@ func CopyImage(b *Bash, dest_dir, src, device, machine, bitstream string, clean 
 	}
 
 	if !Exists(src) {
-		log.Fatal("Source image directory could not be found")
+		log.Print("Source image directory could not be found")
+		runtime.Goexit()
 	}
 
 	if device != "" {
@@ -40,7 +42,8 @@ func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip s
 	defer os.RemoveAll(dest)
 
 	if !Exists(src) {
-		log.Fatal("Source image directory could not be found")
+		log.Print("Source image directory could not be found")
+		runtime.Goexit()
 	}
 
 	b.Run("../scripts/common-copy.sh", dest, src, machine, bitstream)

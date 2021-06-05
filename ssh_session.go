@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"log"
 	"os"
+	"runtime"
 )
 
 type SshSession struct {
@@ -23,7 +24,8 @@ func NewSshSession(addr, password string) *SshSession {
 
 	client, err := ssh.Dial("tcp", addr+":22", config)
 	if err != nil {
-		log.Fatal("Failed to dial: ", err)
+		log.Print("Failed to dial: ", err)
+		runtime.Goexit()
 	}
 
 	return &SshSession{client}
@@ -32,7 +34,8 @@ func NewSshSession(addr, password string) *SshSession {
 func (s SshSession) Run(cmd string) {
 	session, err := s.client.NewSession()
 	if err != nil {
-		log.Fatal("Failed to create session: ", err)
+		log.Print("Failed to create session: ", err)
+		runtime.Goexit()
 	}
 	defer session.Close()
 
@@ -41,7 +44,8 @@ func (s SshSession) Run(cmd string) {
 	session.Stdout = &buff
 	session.Stderr = &bufferr
 	if err := session.Run(cmd); err != nil {
-		log.Fatal("Failed to run: " + bufferr.String() + " " + err.Error())
+		log.Print("Failed to run: " + bufferr.String() + " " + err.Error())
+		runtime.Goexit()
 	}
 	//fmt.Println("Buf is:" + buff.String())
 }
@@ -49,19 +53,19 @@ func (s SshSession) Run(cmd string) {
 func (s SshSession) CopyFile(src, dst string) {
 	scpClient, err := scp.NewClientBySSH(s.client)
 	if err != nil {
-		log.Fatal("Error creating new SSH session from existing connection: ", err)
+		log.Print("Error creating new SSH session from existing connection: ", err)
+		runtime.Goexit()
 	}
 	defer scpClient.Close()
 
 	f, err := os.Open(src)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 	defer f.Close()
 
 	err = scpClient.CopyFile(f, dst, "0655")
 	if err != nil {
-		log.Fatal("Error while copying file: ", err)
+		log.Print("Error while copying file: ", err)
+		runtime.Goexit()
 	}
 }
 

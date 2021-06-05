@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/pborman/getopt/v2"
 	"log"
+	"runtime"
 )
 
 type options struct {
@@ -52,7 +53,8 @@ func parseOptions() options {
 
 	if opt.Copy {
 		if opt.HDF == "" && opt.Bitstream == "" {
-			log.Fatal("Bitstream is required when copy flag is used")
+			log.Print("Bitstream is required when copy flag is used")
+			runtime.Goexit()
 		}
 	}
 

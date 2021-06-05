@@ -28,7 +28,7 @@ type tomlConfig struct {
 func parseConfig(f string) (tomlConfig, error) {
 	var config tomlConfig
 	if _, err := toml.DecodeFile(f, &config); err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return tomlConfig{}, err
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -21,9 +22,7 @@ type Yocto struct {
 func (y Yocto) addLayers(layers ...string) {
 	old_dir, _ := os.Getwd()
 	err := os.Chdir(y.cfg.SetupDir + "/build")
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	for _, l := range layers {
 		// XXX: When BBPATH is set show-layers work but add-layers complains
@@ -33,9 +32,7 @@ func (y Yocto) addLayers(layers ...string) {
 	}
 
 	err = os.Chdir(old_dir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 }
 
 func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
@@ -85,7 +82,8 @@ func (y Yocto) setupBuildDir(sd string) {
 	y.b.Run("bash", "-c", cmd)
 
 	if !Exists(build_dir) {
-		log.Fatal("Error when creating poky build directory")
+		log.Print("Error when creating poky build directory")
+		runtime.Goexit()
 	}
 }
 
@@ -122,9 +120,7 @@ func (y Yocto) setupRepo(doPull bool, repo, directory, release string) {
 
 	old_dir, _ := os.Getwd()
 	err := os.Chdir(directory)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	if y.clean {
 		y.b.Run("git", "checkout", "--", ".")
@@ -138,9 +134,7 @@ func (y Yocto) setupRepo(doPull bool, repo, directory, release string) {
 	y.b.Run("checkout_repository", release)
 
 	err = os.Chdir(old_dir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 }
 
 func (y Yocto) needsPull() (ret bool) {
@@ -160,16 +154,12 @@ func (y Yocto) needsPull() (ret bool) {
 
 			now := time.Now().Local()
 			err := os.Chtimes(pullFile, now, now)
-			if err != nil {
-				log.Fatal(err)
-			}
+			LogAndExit(err)
 		}
 	}
 
 	err := CreateFile(pullFile)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	return ret
 }
@@ -183,9 +173,7 @@ func (y Yocto) setupYocto() {
 	y.rebuildLocalCfg(y.cfg.SetupDir)
 
 	err := os.Chdir(y.cfg.SetupDir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	y.b.Export("BBPATH", y.cfg.SetupDir+"/build")
 

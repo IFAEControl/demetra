@@ -34,9 +34,7 @@ func (b Bash) Export(key, value string) {
 
 func (b Bash) Run(cmd string, args ...string) {
 	err := b.runCommand(cmd, args)
-	if err != nil {
-		panic(err)
-	}
+	LogAndExit(err)
 }
 
 func NewBash() *Bash {

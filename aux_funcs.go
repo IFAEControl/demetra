@@ -11,6 +11,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -19,19 +20,45 @@ func CommandInPath(cmd string) bool {
 	return err == nil
 }
 
-func MakeTmpDir() string {
-	dest, err := ioutil.TempDir(os.TempDir(), "demetra")
-	if err != nil {
-		log.Fatal(err)
+func Copy(src, dst string) (err error) {
+	sourceFileStat, err := os.Stat(src)
+	LogAndExit(err)
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file", src)
 	}
 
-	return dest
+	source, err := os.Open(src)
+	LogAndExit(err)
+
+	defer source.Close()
+
+	destination, err := os.Create(dst)
+	LogAndExit(err)
+
+	defer destination.Close()
+
+	_, err = io.Copy(destination, source)
+	return err
+}
+
+func CreateDir(path string) {
+	err := os.MkdirAll(path, os.ModePerm)
+	LogAndExit(err)
+}
+
+func CreateFile(name string) error {
+	file, err := os.OpenFile(name, os.O_RDONLY|os.O_CREATE, 0644)
+	LogAndExit(err)
+
+	return file.Close()
 }
 
 func Expand(path string) string {
 	usr, err := user.Current()
 	if err != nil {
-		log.Fatalln("Can not get current user: ", err)
+		log.Println("Can not get current user: ", err)
+		runtime.Goexit()
 	}
 
 	return strings.Replace(path, "~", usr.HomeDir, 1)
@@ -44,57 +71,21 @@ func Exists(name string) bool {
 	return true
 }
 
+func MakeTmpDir() string {
+	dest, err := ioutil.TempDir(os.TempDir(), "demetra")
+	LogAndExit(err)
+
+	return dest
+}
+
 func GetStem(uri string) string {
 	fname := path.Base(uri)
 	return strings.Split(fname, ".")[0]
 }
 
-func Copy(src, dst string) (err error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", src)
-	}
-
-	source, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
-	destination, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-
-	_, err = io.Copy(destination, source)
-	return err
-}
-
-func CreateFile(name string) error {
-	file, err := os.OpenFile(name, os.O_RDONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return err
-	}
-	return file.Close()
-}
-
-func CreateDir(path string) {
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func GetSstateCacheDir() string {
 	xdg_cache_dir, err := os.UserCacheDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	cache_dir := xdg_cache_dir + "/demetra/sstate-cache"
 	CreateDir(cache_dir)
@@ -104,9 +95,7 @@ func GetSstateCacheDir() string {
 
 func GetDlDir() string {
 	xdg_cache_dir, err := os.UserCacheDir()
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
 
 	dl_dir := xdg_cache_dir + "/demetra/downloads"
 	CreateDir(dl_dir)
@@ -174,18 +163,21 @@ func Unzip(src string, dest string) ([]string, error) {
 
 func RemoveContents(dir string) {
 	d, err := os.Open(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
+
 	defer d.Close()
 	names, err := d.Readdirnames(-1)
-	if err != nil {
-		log.Fatal(err)
-	}
+	LogAndExit(err)
+
 	for _, name := range names {
 		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			log.Fatal(err)
-		}
+		LogAndExit(err)
+	}
+}
+
+func LogAndExit(err error) {
+	if err != nil {
+		log.Print(err)
+		runtime.Goexit()
 	}
 }
