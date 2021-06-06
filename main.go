@@ -84,8 +84,9 @@ func main() {
 		}
 	}
 
+	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
+	imgDir := yocto.GetImageDir()
 	if !opt.Docker {
-		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
 		yocto.setupYocto()
 
 		// build
@@ -100,11 +101,11 @@ func main() {
 
 	// TODO: Implement copy script in Go
 	if opt.Copy {
-		CopyImage(b, opt.DestDir, "build/tmp/deploy/images/", "", cfg.Machine, opt.Bitstream, false)
+		CopyImage(b, opt.DestDir, imgDir, "", cfg.Machine, opt.Bitstream, false)
 	}
 
 	if opt.SshCopy {
-		CopyRemoteImage(b, "build/tmp/deploy/images/", cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, opt.NoQSPI)
+		CopyRemoteImage(b, imgDir, cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, opt.NoQSPI)
 	}
 }
 

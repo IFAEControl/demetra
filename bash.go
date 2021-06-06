@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"github.com/progrium/go-basher"
 	"os"
@@ -24,6 +25,23 @@ func (b Bash) runCommand(cmd string, args []string) error {
 	return nil
 }
 
+func (b Bash) runCommandWithOutput(cmd string, args []string) (string, error) {
+	var buff bytes.Buffer
+	b.ctx.Stdout = &buff
+	status, err := b.ctx.Run(cmd, args)
+	if err != nil {
+		return "", err
+	}
+
+	if status != 0 {
+		return "", errors.New("Unknown return number: " + strconv.Itoa(status))
+	}
+
+	b.ctx.Stdout = os.Stdout
+
+	return buff.String(), nil
+}
+
 func (b Bash) Source(script string) {
 	b.ctx.Source(script, nil)
 }
@@ -35,6 +53,13 @@ func (b Bash) Export(key, value string) {
 func (b Bash) Run(cmd string, args ...string) {
 	err := b.runCommand(cmd, args)
 	LogAndExit(err)
+}
+
+func (b Bash) RunWithOutput(cmd string, args ...string) string {
+	stdout, err := b.runCommandWithOutput(cmd, args)
+	LogAndExit(err)
+
+	return stdout
 }
 
 func NewBash() *Bash {

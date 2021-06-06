@@ -19,6 +19,27 @@ type Yocto struct {
 	demetraDir string
 }
 
+func (y Yocto) BuildImage(shell bool) {
+	if shell {
+		y.b.Run("bash")
+	}
+	y.b.Run("build")
+}
+
+func (y Yocto) GetImageDir() string {
+	old_dir, _ := os.Getwd()
+	err := os.Chdir(y.cfg.SetupDir + "/build")
+	LogAndExit(err)
+
+	path := y.b.RunWithOutput("../bitbake/bin/bitbake -e | grep \"^DEPLOY_DIR_IMAGE=\"")
+	path = strings.Split(path, "=")[1]
+
+	err = os.Chdir(old_dir)
+	LogAndExit(err)
+
+	return path
+}
+
 func (y Yocto) addLayers(layers ...string) {
 	old_dir, _ := os.Getwd()
 	err := os.Chdir(y.cfg.SetupDir + "/build")
@@ -217,11 +238,4 @@ func (y Yocto) setupYocto() {
 	conf.append("KERNEL_MODULE_AUTOLOAD", "ifae_linda")
 
 	y.setupLayers(doPull, y.cfg.Repo, y.cfg.Release)
-}
-
-func (y Yocto) BuildImage(shell bool) {
-	if shell {
-		y.b.Run("bash")
-	}
-	y.b.Run("build")
 }
