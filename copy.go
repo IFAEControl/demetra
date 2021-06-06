@@ -12,7 +12,7 @@ func CopyImage(b *Bash, dest_dir, src, device, machine, bitstream string, clean 
 	}
 
 	if !Exists(src) {
-		log.Print("Source image directory could not be found")
+		log.Print("Source image directory could not be found: " + src)
 		runtime.Goexit()
 	}
 
@@ -38,7 +38,7 @@ func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip s
 	defer os.RemoveAll(dest)
 
 	if !Exists(src) {
-		log.Print("Source image directory could not be found")
+		log.Print("Source image directory could not be found: " + src)
 		runtime.Goexit()
 	}
 

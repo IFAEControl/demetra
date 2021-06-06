@@ -51,7 +51,8 @@ func main() {
 		b.Source("scripts/helper_functions.sh")
 		b.Export("DOCKER_MOUNT_ARGS", volumes)
 		b.Run("dockerized_run", args...)
-		os.Exit(0)
+		// TODO: Run another command to extract info from bitbake, DEPLOY_IMAGE_DIR
+		//os.Exit(0)
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
@@ -84,9 +85,9 @@ func main() {
 		}
 	}
 
-	yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
-	imgDir := yocto.GetImageDir()
 	if !opt.Docker {
+		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
+		imgDir := yocto.GetImageDir()
 		yocto.setupYocto()
 
 		// build
@@ -95,17 +96,21 @@ func main() {
 		}
 	}
 
-	// Ensure we are on the correct location
-	err = os.Chdir(cfg.SetupDir)
-	LogAndExit(err)
+	// Only copy from outside docker container
+	if !Exists("/.dockerenv") {
 
-	// TODO: Implement copy script in Go
-	if opt.Copy {
-		CopyImage(b, opt.DestDir, imgDir, "", cfg.Machine, opt.Bitstream, false)
-	}
+		// XXX: Maybe it's not needed to change dir anymore
+		// Ensure we are on the correct location
+		err = os.Chdir(cfg.SetupDir)
+		LogAndExit(err)
 
-	if opt.SshCopy {
-		CopyRemoteImage(b, imgDir, cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, opt.NoQSPI)
+		if opt.Copy {
+			CopyImage(b, opt.DestDir, imgDir, "", cfg.Machine, opt.Bitstream, false)
+		}
+
+		if opt.SshCopy {
+			CopyRemoteImage(b, imgDir, cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, opt.NoQSPI)
+		}
 	}
 }
 
