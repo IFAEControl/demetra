@@ -117,9 +117,9 @@ func commonCopy(b *Bash, dest, src, machine, bitstream string) {
 	// From microzed
 	// cp "$SRC/u-boot.img" "$DEST"
 
-	Copy(src+"/boot.bin", dest)
-	Copy(src+"/uImage", dest)
+	Copy(src+"/boot.bin", dest+"/boot.bin")
+	Copy(src+"/uImage", dest+"/uImage")
 
 	// Convert bit to bin. bit format is not compatible
-	b.Run("python resources/fpga-bit-to-bin.py --flip  \"" + bitstream + "\" \"" + dest + "/fpga.bin\"")
+	b.Run("python ../resources/fpga-bit-to-bin.py --flip  \"" + bitstream + "\" \"" + dest + "/fpga.bin\"")
 }

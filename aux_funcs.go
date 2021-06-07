@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 )
 
@@ -178,6 +179,7 @@ func RemoveContents(dir string) {
 func LogAndExit(err error) {
 	if err != nil {
 		log.Print(err)
+		debug.PrintStack()
 		runtime.Goexit()
 	}
 }

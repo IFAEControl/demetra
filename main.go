@@ -87,7 +87,7 @@ func main() {
 
 	if !opt.Docker {
 		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
-		imgDir := yocto.GetImageDir()
+		//imgDir := yocto.GetImageDir()
 		yocto.setupYocto()
 
 		// build
@@ -103,6 +103,8 @@ func main() {
 		// Ensure we are on the correct location
 		err = os.Chdir(cfg.SetupDir)
 		LogAndExit(err)
+
+		imgDir := "build/tmp/deploy/images/" + cfg.Machine
 
 		if opt.Copy {
 			CopyImage(b, opt.DestDir, imgDir, "", cfg.Machine, opt.Bitstream, false)
