@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
@@ -16,9 +15,14 @@ import (
 	"strings"
 )
 
-func CommandInPath(cmd string) bool {
-	_, err := exec.LookPath(cmd)
-	return err == nil
+func getCacheDir(name string) string {
+	xdg_cache_dir, err := os.UserCacheDir()
+	LogAndExit(err)
+
+	cache_dir := xdg_cache_dir + "/demetra/" + name
+	CreateDir(cache_dir)
+
+	return cache_dir
 }
 
 func Copy(src, dst string) (err error) {
@@ -85,23 +89,15 @@ func GetStem(uri string) string {
 }
 
 func GetSstateCacheDir() string {
-	xdg_cache_dir, err := os.UserCacheDir()
-	LogAndExit(err)
+	return getCacheDir("sstate-cache")
+}
 
-	cache_dir := xdg_cache_dir + "/demetra/sstate-cache"
-	CreateDir(cache_dir)
-
-	return cache_dir
+func GetBackupDir() string {
+	return getCacheDir("fw_backups")
 }
 
 func GetDlDir() string {
-	xdg_cache_dir, err := os.UserCacheDir()
-	LogAndExit(err)
-
-	dl_dir := xdg_cache_dir + "/demetra/downloads"
-	CreateDir(dl_dir)
-
-	return dl_dir
+	return getCacheDir("downloads")
 }
 
 // Unzip will decompress a zip archive, moving all files and folders
