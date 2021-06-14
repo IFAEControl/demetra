@@ -6,43 +6,50 @@ import (
 	"runtime"
 )
 
-func CopyImage(b *Bash, dest_dir, src, device, machine, bitstream string, clean bool) {
-	if !Exists(dest_dir) {
-		CreateDir(dest_dir)
+type CopyImage struct {
+	b         *Bash
+	src       string
+	machine   string
+	bitstream string
+}
+
+func (c CopyImage) Local(destDir, device string, clean bool) {
+	if !Exists(destDir) {
+		CreateDir(destDir)
 	}
 
-	if !Exists(src) {
-		log.Print("Source image directory could not be found: " + src)
+	if !Exists(c.src) {
+		log.Print("Source image directory could not be found: " + c.src)
 		runtime.Goexit()
 	}
 
 	if device != "" {
-		b.Run("mount", device, dest_dir)
+		c.b.Run("mount", device, destDir)
 	}
 
 	if clean {
-		RemoveContents(dest_dir)
+		RemoveContents(destDir)
 	}
 
-	commonCopy(b, dest_dir, src, machine, bitstream)
+	c.commonCopy(destDir)
 
 	if device != "" {
-		b.Run("udisksctl unmount -b", device)
-		b.Run("udisksctl power-off -b", device)
+		c.b.Run("udisksctl unmount -b", device)
+		c.b.Run("udisksctl power-off -b", device)
 	}
 }
 
-func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip string, no_qspi bool) {
+func (c CopyImage) Remote(password, ssh_ip string, no_qspi bool) {
 	//b.Run("../scripts/ssh-copy.sh", "build/tmp/deploy/images/", cfg.Machine, opt.Bitstream, opt.Password, opt.SshIP, strconv.FormatBool(opt.NoQSPI))
 	dest := MakeTmpDir()
 	defer os.RemoveAll(dest)
 
-	if !Exists(src) {
-		log.Print("Source image directory could not be found: " + src)
+	if !Exists(c.src) {
+		log.Print("Source image directory could not be found: " + c.src)
 		runtime.Goexit()
 	}
 
-	commonCopy(b, dest, src, machine, bitstream)
+	c.commonCopy(dest)
 
 	ssh := NewSshSession(ssh_ip, password)
 	defer ssh.Close()
@@ -75,51 +82,51 @@ func CopyRemoteImage(b *Bash, src, machine, bitstream string, password, ssh_ip s
 	ssh.Run("reboot")
 }
 
-func commonCopy(b *Bash, dest, src, machine, bitstream string) {
+func (c CopyImage) commonCopy(dest string) {
 	//Explained in https://github.com/Xilinx/meta-xilinx/blob/master/README.booting.md#loading-via-sd
 
-	switch machine {
+	switch c.machine {
 	case "mercury-zx5":
 		// Generate boot.bin for enclustra
-		Copy(src+"/u-boot.elf", "resources/binaries")
-		Copy(bitstream, "resources/binaries/fpga.bit")
+		Copy(c.src+"/u-boot.elf", "resources/binaries")
+		Copy(c.bitstream, "resources/binaries/fpga.bit")
 
 		old_dir, _ := os.Getwd()
 		err := os.Chdir("resources/binaries")
 		LogAndExit(err)
 
-		b.Run("mkbootimage boot.bif /tmp/boot.bin")
+		c.b.Run("mkbootimage boot.bif /tmp/boot.bin")
 
 		err = os.Chdir(old_dir)
 		LogAndExit(err)
 
-		Copy("/tmp/boot.bin", src+"/boot.bin")
-		Copy(src+"/"+machine+".dtb", dest+"/devicetree.dtb")
-		Copy(src+"/core-image-minimal-"+machine+".cpio.gz.u-boot", dest+"/uramdisk")
+		Copy("/tmp/boot.bin", c.src+"/boot.bin")
+		Copy(c.src+"/"+c.machine+".dtb", dest+"/devicetree.dtb")
+		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk")
 		Copy("resources/uEnv.txt", dest+"/uEnv.txt")
 
 		// Check sizes
-		b.Run("scripts/check_image_files_size.py", dest)
+		c.b.Run("scripts/check_image_files_size.py", dest)
 	case "zc702-zynq7":
-		Copy(src+"/zynq-zc702.dtb", dest)
-		Copy(src+"/boot.scr", dest)
-		Copy(src+"/u-boot.img", dest)
+		Copy(c.src+"/zynq-zc702.dtb", dest)
+		Copy(c.src+"/boot.scr", dest)
+		Copy(c.src+"/u-boot.img", dest)
 
 		// Couple of hacks to be able to load the FPGA
-		b.Run("cat " + src + "/uEnv.txt | tr -d '\t' | sed 's/bitstream_image=boot.bin/bitstream_image=fpga.bin/' > " + dest + "/uEnv.txt")
-		b.Run("echo \"bootcmd=run loadfpga && run distro_bootcmd\" >> " + dest + "/uEnv.txt")
+		c.b.Run("cat " + c.src + "/uEnv.txt | tr -d '\t' | sed 's/bitstream_image=boot.bin/bitstream_image=fpga.bin/' > " + dest + "/uEnv.txt")
+		c.b.Run("echo \"bootcmd=run loadfpga && run distro_bootcmd\" >> " + dest + "/uEnv.txt")
 		// cp "$SRC/uEnv.txt" "$DEST" || exit 1
-		Copy(src+"/core-image-minimal-"+machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
+		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
 	case "picozed-zynq7":
-		Copy(src+"/core-image-minimal-"+machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
+		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
 	}
 
 	// From microzed
 	// cp "$SRC/u-boot.img" "$DEST"
 
-	Copy(src+"/boot.bin", dest+"/boot.bin")
-	Copy(src+"/uImage", dest+"/uImage")
+	Copy(c.src+"/boot.bin", dest+"/boot.bin")
+	Copy(c.src+"/uImage", dest+"/uImage")
 
 	// Convert bit to bin. bit format is not compatible
-	b.Run("python ../resources/fpga-bit-to-bin.py --flip  \"" + bitstream + "\" \"" + dest + "/fpga.bin\"")
+	c.b.Run("python ../resources/fpga-bit-to-bin.py --flip  \"" + c.bitstream + "\" \"" + dest + "/fpga.bin\"")
 }
