@@ -119,6 +119,7 @@ func (c CopyImage) commonCopy(dest string) {
 		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
 	case "picozed-zynq7":
 		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
+		Copy("../blobs/boot.bin", c.src+"/boot.bin")
 	}
 
 	// From microzed
