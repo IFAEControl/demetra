@@ -52,7 +52,6 @@ func main() {
 		b.Export("DOCKER_MOUNT_ARGS", volumes)
 		b.Run("dockerized_run", args...)
 		// TODO: Run another command to extract info from bitbake, DEPLOY_IMAGE_DIR
-		//os.Exit(0)
 	}
 
 	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
@@ -106,6 +105,7 @@ func main() {
 		imgDir := "build/tmp/deploy/images/" + cfg.Machine
 		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream}
 
+		copy.Backup()
 		if opt.Copy {
 			copy.Local(opt.DestDir, "", false)
 		}

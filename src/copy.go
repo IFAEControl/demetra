@@ -13,6 +13,18 @@ type CopyImage struct {
 	bitstream string
 }
 
+func (c CopyImage) Backup() {
+	if !Exists(c.src) {
+		log.Print("Source image directory could not be found: " + c.src)
+		runtime.Goexit()
+	}
+
+	dst := CreateNewBackupDir()
+
+	c.commonCopy(dst)
+
+}
+
 func (c CopyImage) Local(destDir, device string, clean bool) {
 	if !Exists(destDir) {
 		CreateDir(destDir)
