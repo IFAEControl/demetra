@@ -105,13 +105,20 @@ func main() {
 		imgDir := "build/tmp/deploy/images/" + cfg.Machine
 		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream}
 
-		copy.Backup()
+
+		
 		if opt.Copy {
 			copy.Local(opt.DestDir, "", false)
 		}
 
 		if opt.SshCopy {
 			copy.Remote(opt.Password, opt.SshIP, opt.NoQSPI)
+
+		}
+
+		if opt.Copy || opt.SshCopy {
+			copy.Backup()
+			log.Println("All copy operations done")
 		}
 	}
 }

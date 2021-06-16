@@ -39,7 +39,7 @@ if d != b'a':
 
 l = short.unpack(bitfile.read(2))[0]
 d = bitfile.read(l)
-print("Design name: %s" % d)
+#print("Design name: %s" % d)
 
 # If bitstream is a partial bitstream, get some information from filename and header
 if b"PARTIAL=TRUE" in d:
@@ -70,7 +70,7 @@ if b"PARTIAL=TRUE" in d:
 		print("UserID: 0x%x" % userid)
 
 else:
-	print("Full bitstream")
+	#print("Full bitstream")
 	partial = False
 	node_nr = 0
 
@@ -83,10 +83,10 @@ while 1:
 		raise Exception("unexpected EOF")
 	elif k == b'e':
 		l = ulong.unpack(bitfile.read(4))[0]
-		print("Found binary data: %s" % l)
+		#print("Found binary data: %s" % l)
 		d = bitfile.read(l)
 		if args.flip:
-			print("Flipping data...")
+			#print("Flipping data...")
 			d = flip32(d)
 		# Open bin file
 		binfile = open(args.binfile, 'wb')
@@ -96,14 +96,14 @@ while 1:
 			binfile.write(struct.pack("B", node_nr))
 			binfile.write(struct.pack(">H", userid))
 		# Write the converted bit-2-bin data
-		print("Writing data...")
+		#print("Writing data...")
 		binfile.write(d)
 		binfile.close()
 		break
 	elif k in KEYNAMES:
 		l = short.unpack(bitfile.read(2))[0]
 		d = bitfile.read(l)
-		print(KEYNAMES[k], d)
+		#print(KEYNAMES[k], d)
 	else:
 		print("Unexpected key: %s" % k)
 		l = short.unpack(bitfile.read(2))[0]
