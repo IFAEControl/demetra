@@ -198,7 +198,9 @@ func (y Yocto) setupYocto() {
 
 	y.b.Export("BBPATH", y.cfg.SetupDir+"/build")
 
-	y.b.Run("checkout_machine", y.cfg.Machine)
+	// Because local.conf use a soft assignment by default we can override
+	// simply by exporting the variable
+	y.b.Export("MACHINE", y.cfg.Machine)
 	y.b.Run("set_password", y.password)
 
 	conf := NewLocalConf()

@@ -45,20 +45,6 @@ function checkout_repository() {
 	fi
 }
 
-function check_machine() {
-	if [[ ! $VALID_MACHINES =~ (^|[[:space:]])"$1"($|[[:space:]]) ]] ; then
-	    echo "Invalid machine name. Exiting"
-		exit 5
-	fi
-}
-
-function checkout_machine() {
-	check_machine "$1"
-	if ! grep "\"$1\"" build/conf/local.conf > /dev/null; then
-		sed -i "s/^\(MACHINE ??= \).*/\1\"$1\"/" build/conf/local.conf
-	fi
-}
-
 function build() {
 	source oe-init-build-env
 	bitbake core-image-minimal
