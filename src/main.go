@@ -99,13 +99,8 @@ func main() {
 
 	// Only copy from outside docker container
 	if !Exists("/.dockerenv") && opt.Copy {
-
-		// Ensure we are on the correct location
-		err = os.Chdir(cfg.SetupDir)
-		LogAndExit(err)
-
-		imgDir := "build/tmp/deploy/images/" + cfg.Machine
-		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream}
+		imgDir := cfg.SetupDir + "/build/tmp/deploy/images/" + cfg.Machine
+		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream, demetraDir}
 
 		if opt.SshCopy {
 			copy.Remote(opt.Password, opt.SshIP, opt.NoQSPI)

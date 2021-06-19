@@ -7,10 +7,11 @@ import (
 )
 
 type CopyImage struct {
-	b         *Bash
-	src       string
-	machine   string
-	bitstream string
+	b          *Bash
+	src        string
+	machine    string
+	bitstream  string
+	demetraDir string
 }
 
 func (c CopyImage) Backup() {
@@ -131,7 +132,7 @@ func (c CopyImage) commonCopy(dest string) {
 		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
 	case "picozed-zynq7":
 		Copy(c.src+"/core-image-minimal-"+c.machine+".cpio.gz.u-boot", dest+"/uramdisk.image.gz")
-		Copy("../blobs/boot.bin", c.src+"/boot.bin")
+		Copy(c.demetraDir+"/blobs/boot.bin", c.src+"/boot.bin")
 	}
 
 	// From microzed
@@ -141,5 +142,5 @@ func (c CopyImage) commonCopy(dest string) {
 	Copy(c.src+"/uImage", dest+"/uImage")
 
 	// Convert bit to bin. bit format is not compatible
-	c.b.Run("python ../resources/fpga-bit-to-bin.py --flip  \"" + c.bitstream + "\" \"" + dest + "/fpga.bin\"")
+	c.b.Run("python " + c.demetraDir + "/resources/fpga-bit-to-bin.py --flip  \"" + c.bitstream + "\" \"" + dest + "/fpga.bin\"")
 }
