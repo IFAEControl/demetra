@@ -46,6 +46,8 @@ func main() {
 		volumes += " -v " + d + ":" + d
 		dl := GetDlDir()
 		volumes += " -v " + dl + ":" + dl
+		sd := GetDataDir("")
+		volumes += " -v " + sd + ":" + sd
 
 		// Run this program inside container and exit
 		b.Source("scripts/helper_functions.sh")
@@ -96,7 +98,7 @@ func main() {
 	}
 
 	// Only copy from outside docker container
-	if !Exists("/.dockerenv") {
+	if !Exists("/.dockerenv") && opt.Copy {
 
 		// Ensure we are on the correct location
 		err = os.Chdir(cfg.SetupDir)
@@ -105,21 +107,14 @@ func main() {
 		imgDir := "build/tmp/deploy/images/" + cfg.Machine
 		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream}
 
-
-		
-		if opt.Copy {
+		if opt.SshCopy {
+			copy.Remote(opt.Password, opt.SshIP, opt.NoQSPI)
+		} else {
 			copy.Local(opt.DestDir, "", false)
 		}
 
-		if opt.SshCopy {
-			copy.Remote(opt.Password, opt.SshIP, opt.NoQSPI)
-
-		}
-
-		if opt.Copy || opt.SshCopy {
-			copy.Backup()
-			log.Println("All copy operations done")
-		}
+		copy.Backup()
+		log.Println("All copy operations done")
 	}
 }
 

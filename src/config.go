@@ -32,5 +32,7 @@ func parseConfig(f string) (tomlConfig, error) {
 		return tomlConfig{}, err
 	}
 
+	config.SetupDir = GetProjDataDir(config.SetupDir)
+
 	return config, nil
 }

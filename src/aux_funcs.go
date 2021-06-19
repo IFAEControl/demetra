@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/adrg/xdg"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,13 +17,17 @@ import (
 )
 
 func getCacheDir(name string) string {
-	xdg_cache_dir, err := os.UserCacheDir()
-	LogAndExit(err)
-
-	cache_dir := xdg_cache_dir + "/demetra/" + name
+	cache_dir := xdg.CacheHome + "/demetra/" + name
 	CreateDir(cache_dir)
 
 	return cache_dir
+}
+
+func GetDataDir(name string) string {
+	data_dir := xdg.DataHome + "/demetra/"
+	CreateDir(data_dir)
+
+	return data_dir + name
 }
 
 func Copy(src, dst string) (err error) {
@@ -98,6 +103,10 @@ func GetBackupDir() string {
 
 func GetDlDir() string {
 	return getCacheDir("downloads")
+}
+
+func GetProjDataDir(name string) string {
+	return GetDataDir("projects/" + name)
 }
 
 // Unzip will decompress a zip archive, moving all files and folders

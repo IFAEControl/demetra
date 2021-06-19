@@ -51,6 +51,10 @@ func parseOptions() options {
 
 	getopt.ParseV2()
 
+	if opt.SshCopy {
+		opt.Copy = true
+	}
+
 	if opt.Copy {
 		if opt.HDF == "" && opt.Bitstream == "" {
 			log.Print("Bitstream is required when copy flag is used")

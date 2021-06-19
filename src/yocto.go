@@ -117,7 +117,7 @@ func (y Yocto) rebuildLocalCfg(sd string) {
 
 func (y Yocto) cloneRepo(repo, directory string) string {
 	if directory != "" {
-		if Exists(directory) {
+		if Exists(directory + "/.git") {
 			return directory
 		}
 
@@ -135,7 +135,7 @@ func (y Yocto) setupRepo(doPull bool, repo, directory, release string) {
 		directory = GetStem(repo)
 	}
 
-	if !Exists(directory) {
+	if !Exists(directory + "/.git") {
 		directory = y.cloneRepo(repo, directory)
 	}
 
