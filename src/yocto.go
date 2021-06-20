@@ -139,23 +139,20 @@ func (y Yocto) setupRepo(doPull bool, repo, directory, release string) {
 		directory = y.cloneRepo(repo, directory)
 	}
 
-	old_dir, _ := os.Getwd()
-	err := os.Chdir(directory)
-	LogAndExit(err)
-
+	baseCmd := "git -C " + directory
 	if y.clean {
-		y.b.Run("git", "checkout", "--", ".")
-		y.b.Run("git", "clean", "-fd")
+		y.b.Run(baseCmd, "checkout", "--", ".")
+		y.b.Run(baseCmd, "clean", "-fd")
 	}
 
 	if doPull {
-		y.b.Run("git", "pull")
+		y.b.Run(baseCmd, "pull")
 	}
 
-	y.b.Run("checkout_repository", release)
-
-	err = os.Chdir(old_dir)
-	LogAndExit(err)
+	currentBranch := strings.TrimSpace(y.b.RunWithOutput(baseCmd, "rev-parse", "--abbrev-ref", "HEAD"))
+	if currentBranch != release {
+		y.b.Run(baseCmd, "checkout", release)
+	}
 }
 
 func (y Yocto) needsPull() (ret bool) {

@@ -9,18 +9,6 @@ function get_git_commit() {
    )
 }
 
-function get_current_branch() {
-   git rev-parse --abbrev-ref HEAD
-}
-
-function is_current_branch() {
-   if [ "$(get_current_branch)" != "$1" ]; then
-        return 1
-    else
-        return 0
-    fi
-}
-
 function set_password() {
 	if ! grep 'INHERIT += "extrausers"' build/conf/local.conf > /dev/null; then
   		echo 'INHERIT += "extrausers"' >> build/conf/local.conf
@@ -37,12 +25,6 @@ function date_last_commit() {
 	cd "$1" || exit
 	date -d"$(git log -1 --format=%cD)" +%Y%m%d%H%M
 	cd "$YOCTO_WD" || exit
-}
-
-function checkout_repository() {
-	if ! is_current_branch $1; then
-		git checkout $1
-	fi
 }
 
 function build() {
