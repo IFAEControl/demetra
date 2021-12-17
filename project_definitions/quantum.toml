@@ -1,0 +1,22 @@
+setup_dir = "quantum_yocto"
+release = "zeus"
+machine = "microzed-zynq7"
+
+# Packages to be installed
+packages = ["iquse", "git", "chrony", "openssh"]
+
+[[repo]]
+uri = "git@gitlab02.pic.es:QuantumC/meta-quantum.git"
+layers = ["meta-quantum"]
+
+# Needed for external flag
+#[srcs]
+#	[srcs.linda-module]
+#	module = true
+#	path = "~/Develop/Work/linda/linda_module"
+#	[srcs.linda-library]
+#	module = false
+#	path = "~/Develop/Work/linda/linda_library"
+#	[srcs.linda-server]
+#	module = false
+#	path = "~/Develop/Work/linda/linda_server"
