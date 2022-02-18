@@ -12,12 +12,12 @@ packages = ["deepdetection-server"]
 
 # Needed for external flag
 [srcs]
-	[srcs.linda-module]
+	[srcs.deepdetection-module]
 	module = true
-	path = "~/Develop/Work/linda/deepdetection_module"
+	path = "~/Develop/Work/DeepDetection/deepdetection_module"
 	[srcs.linda-library]
 	module = false
 	path = "~/Develop/Work/linda/linda_library"
-	[srcs.linda-server]
+	[srcs.deepdetection-server]
 	module = false
-	path = "~/Develop/Work/deepdetection/deepdetection_server"
+	path = "~/Develop/Work/DeepDetection/deepdetection_server"

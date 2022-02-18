@@ -7,4 +7,6 @@ This tools aims to simplify the process of building an image for the different p
 Petalinux provides an obscure (closed source) layer which tries to simplify the process of building an image for a board. This is good for first time users which don't need much flexibility but it puts more strain when the same setup have to be used by different people or in different machines. 
 This project allows to use a known environment across all the development team and automatize some tasks to speed up both development and testing. 
 
+## Support
 
+Version 0.0.1 supports up to gatesgarth yocto branch
