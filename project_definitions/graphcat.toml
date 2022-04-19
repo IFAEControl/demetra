@@ -1,4 +1,3 @@
-setup_dir = "graphcat_yocto"
 release = "zeus"
 machine = "zc702-zynq7"
 

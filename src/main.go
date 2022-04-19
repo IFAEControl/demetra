@@ -56,7 +56,7 @@ func main() {
 		// TODO: Run another command to extract info from bitbake, DEPLOY_IMAGE_DIR
 	}
 
-	cfg.SetupDir, err = filepath.Abs(Expand(cfg.SetupDir))
+	setupDir, err := filepath.Abs(Expand(GetProjDataDir(GetStem(opt.ProjDef))))
 	LogAndExit(err)
 
 	if opt.Release != "" {
@@ -87,7 +87,7 @@ func main() {
 	}
 
 	if !opt.Docker {
-		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir}
+		yocto := Yocto{b, cfg, opt.External, opt.Password, !opt.NoClean, opt.ForcePull, demetraDir, setupDir}
 		//imgDir := yocto.GetImageDir()
 		yocto.setupYocto()
 
@@ -99,7 +99,7 @@ func main() {
 
 	// Only copy from outside docker container
 	if !Exists("/.dockerenv") && opt.Copy {
-		imgDir := cfg.SetupDir + "/build/tmp/deploy/images/" + cfg.Machine
+		imgDir := setupDir + "/build/tmp/deploy/images/" + cfg.Machine
 		copy := CopyImage{b, imgDir, cfg.Machine, opt.Bitstream, demetraDir}
 
 		if opt.SshCopy {

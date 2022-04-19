@@ -17,7 +17,6 @@ type repo struct {
 }
 
 type tomlConfig struct {
-	SetupDir string `toml:"setup_dir"`
 	Release  string
 	Machine  string
 	Packages []string
@@ -31,8 +30,6 @@ func parseConfig(f string) (tomlConfig, error) {
 		log.Print(err)
 		return tomlConfig{}, err
 	}
-
-	config.SetupDir = GetProjDataDir(config.SetupDir)
 
 	return config, nil
 }
