@@ -1,4 +1,3 @@
-setup_dir = "quantum_yocto"
 release = "zeus"
 machine = "microzed-zynq7"
 

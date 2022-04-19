@@ -17,6 +17,7 @@ type Yocto struct {
 	clean      bool
 	forcePull  bool
 	demetraDir string
+	setupDir   string
 }
 
 func (y Yocto) BuildImage(shell bool) {
@@ -28,7 +29,7 @@ func (y Yocto) BuildImage(shell bool) {
 
 func (y Yocto) GetImageDir() string {
 	old_dir, _ := os.Getwd()
-	err := os.Chdir(y.cfg.SetupDir + "/build")
+	err := os.Chdir(y.setupDir + "/build")
 	LogAndExit(err)
 
 	path := y.b.RunWithOutput("../bitbake/bin/bitbake -e | grep \"^DEPLOY_DIR_IMAGE=\"")
@@ -42,7 +43,7 @@ func (y Yocto) GetImageDir() string {
 
 func (y Yocto) addLayers(layers ...string) {
 	old_dir, _ := os.Getwd()
-	err := os.Chdir(y.cfg.SetupDir + "/build")
+	err := os.Chdir(y.setupDir + "/build")
 	LogAndExit(err)
 
 	for _, l := range layers {
@@ -187,13 +188,13 @@ func (y Yocto) setupYocto() {
 
 	doPull := y.needsPull()
 
-	y.setupRepo(doPull, "git://git.yoctoproject.org/poky", y.cfg.SetupDir, y.cfg.Release)
-	y.rebuildLocalCfg(y.cfg.SetupDir)
+	y.setupRepo(doPull, "git://git.yoctoproject.org/poky", y.setupDir, y.cfg.Release)
+	y.rebuildLocalCfg(y.setupDir)
 
-	err := os.Chdir(y.cfg.SetupDir)
+	err := os.Chdir(y.setupDir)
 	LogAndExit(err)
 
-	y.b.Export("BBPATH", y.cfg.SetupDir+"/build")
+	y.b.Export("BBPATH", y.setupDir+"/build")
 
 	// Because local.conf use a soft assignment by default we can override
 	// simply by exporting the variable

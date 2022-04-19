@@ -1,4 +1,3 @@
-setup_dir = "linda_yocto"
 release = "gatesgarth"
 machine = "picozed-zynq7"
 
