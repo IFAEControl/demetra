@@ -1,4 +1,4 @@
-release = "gatesgarth"
+release = "zeus"
 machine = "picozed-zynq7"
 
 # Packages to be installed
