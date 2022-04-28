@@ -9,4 +9,4 @@ This project allows to use a known environment across all the development team a
 
 ## Support
 
-Version 0.0.2 supports up to gatesgarth yocto branch
+Version 0.0.3 supports up to gatesgarth yocto branch
