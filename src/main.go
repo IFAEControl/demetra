@@ -37,9 +37,11 @@ func main() {
 		}
 
 		var volumes string
-		for _, v := range cfg.Srcs {
-			p := Expand(v.Path)
-			volumes += " -v " + p + ":" + p
+		if opt.External {
+			for _, v := range cfg.Srcs {
+				p := Expand(v.Path)
+				volumes += " -v " + p + ":" + p
+			}
 		}
 
 		d := GetSstateCacheDir()
