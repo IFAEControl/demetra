@@ -49,7 +49,7 @@ func (c LocalConf) contains(line string) bool {
 }
 
 func (c LocalConf) append(key, val string) {
-	line := key + "_append = \" " + val + "\""
+	line := key + ":append = \" " + val + "\""
 	c.add(line)
 }
 

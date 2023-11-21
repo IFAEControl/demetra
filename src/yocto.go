@@ -61,7 +61,7 @@ func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
 		{"git@gitlab.pic.es:ifaecontrol/meta-ifae.git", []string{"meta-ifae"}},
-		{"git://git.yoctoproject.org/meta-xilinx", []string{"meta-xilinx/meta-xilinx-bsp"}},
+		{"git://git.yoctoproject.org/meta-xilinx", []string{"meta-xilinx/meta-xilinx-bsp", "meta-xilinx/meta-xilinx-core"}},
 		{"git://git.openembedded.org/meta-openembedded",
 			[]string{
 				"meta-openembedded/meta-oe",
@@ -230,7 +230,8 @@ func (y Yocto) setupYocto() {
 	conf.append("IMAGE_FEATURES", "ssh-server-openssh")
 
 	// Disable stuff we don't use
-	conf.set("DISTRO_FEATURES_remove", "3g bluetooth nfc x11 wayland alsa nfs wifi opengl ext2 smbfs ptest gtk gtk3 multiarch wayland vulkan usbhost")
+	conf.set("DISTRO_FEATURES:remove", "3g bluetooth nfc x11 wayland alsa nfs wifi opengl ext2 smbfs ptest gtk gtk3 multiarch wayland vulkan usbhost")
+	conf.set("CONFIG_DTFILE", "pizoed-zynq7.dts")
 
 	packages := strings.Join(y.cfg.Packages, " ")
 

@@ -1,0 +1,7 @@
+release = "nanbield"
+machine = "zc706-zynq7"
+
+# Extra layer
+#[[repo]]
+#uri = "git@gitlab.pic.es:DESI-GFA/yocto/meta-gfa.git"
+#layers = ["meta-gfa"]
