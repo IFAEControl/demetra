@@ -50,6 +50,7 @@ func (y Yocto) addLayers(layers ...string) {
 		// XXX: When BBPATH is set show-layers work but add-layers complains
 		// it can not find bblayer.conf. This is just a hack until we
 		// are able to fix it
+		fmt.Println("Adding layers: " + l)
 		y.b.Run("../bitbake/bin/bitbake-layers", "add-layer", "../"+l)
 	}
 
@@ -58,10 +59,11 @@ func (y Yocto) addLayers(layers ...string) {
 }
 
 func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
+	// The order of the layers matters
 	default_layers := []repo{
 		{"git@gitlab.pic.es:ifaecontrol/meta-dev.git", []string{"meta-dev"}},
 		{"git@gitlab.pic.es:ifaecontrol/meta-ifae.git", []string{"meta-ifae"}},
-		{"git://git.yoctoproject.org/meta-xilinx", []string{"meta-xilinx/meta-xilinx-bsp", "meta-xilinx/meta-xilinx-core"}},
+		{"https://github.com/Xilinx/meta-xilinx.git", []string{"meta-xilinx/meta-xilinx-core", "meta-xilinx/meta-xilinx-bsp"}},
 		{"git://git.openembedded.org/meta-openembedded",
 			[]string{
 				"meta-openembedded/meta-oe",
@@ -74,6 +76,7 @@ func (y Yocto) setupLayers(doPull bool, layers []repo, release string) {
 	// Check that the repo exist and the branch is correct
 	{
 		for _, l := range default_layers {
+			fmt.Println("Setting up: " + l.Uri)
 			y.setupRepo(doPull, l.Uri, "", release)
 		}
 
