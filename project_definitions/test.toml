@@ -1,0 +1,16 @@
+release = "zeus"
+machine = "picozed-zynq7"
+
+# Packages to be installed
+packages = ["linda-server"]
+
+# Extra layer
+#[[repo]]
+#uri = "https://github.com/Xilinx/meta-xilinx-tools.git"
+#layers = ["meta-xilinx-tools"]
+
+# Needed for external flag
+[srcs]
+	[srcs.linda-server]
+	module = false
+	path = "/tmp/demetra_test"

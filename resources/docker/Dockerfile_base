@@ -1,10 +1,10 @@
-FROM debian:stretch
+FROM debian:bullseye
 
 RUN apt-get update 
 RUN apt-get -y dist-upgrade
 
 # Yocto and meta-xilinx dependencies
-RUN apt-get install -y git python python3 locales diffstat texinfo bzip2 gawk chrpath wget cpio make gcc g++ lsb-release procps libc-dev-bin
+RUN apt-get install -y debianutils xterm git-core python3-git python3-pip python3-pexpect python3-jinja2 pylint3 python3 locales diffstat texinfo bzip2 gawk chrpath wget cpio make gcc-multilib g++ lsb-release procps libc-dev-bin lz4 zstd
 RUN apt-get install -y sshpass
 # Enclustra dependencies
 RUN apt-get install -y curl bc libelf-dev libpcre3-dev
@@ -14,7 +14,7 @@ RUN git clone https://github.com/antmicro/zynq-mkbootimage; cd zynq-mkbootimage;
 RUN apt-get install -y screen
 
 # Petalinux dependencies
-RUN apt-get install -y xterm autoconf zlib1g-dev libtinfo5 net-tools libncurses-dev libtool-bin
+RUN apt-get install -y autoconf zlib1g-dev libtinfo5 net-tools libncurses-dev libtool-bin xxd
 
 # Qemu support
 RUN apt-get update
