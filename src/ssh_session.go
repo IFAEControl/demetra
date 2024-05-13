@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	scp "github.com/bramvdbogaerde/go-scp"
 	"golang.org/x/crypto/ssh"
 	"log"
@@ -62,7 +63,7 @@ func (s SshSession) CopyFile(src, dst string) {
 	LogAndExit(err)
 	defer f.Close()
 
-	err = scpClient.CopyFile(f, dst, "0655")
+	err = scpClient.CopyFile(context.Background(), f, dst, "0655")
 	if err != nil {
 		log.Print("Error while copying file: ", err)
 		runtime.Goexit()
